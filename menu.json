@@ -1,0 +1,667 @@
+{
+  "shop": {
+    "name": "CHABAR",
+    "tagline": "Milk Tea CHABAR Cacao Latte",
+    "phone": "",
+    "hours": "",
+    "wifi": "",
+    "priceUnit": 1000
+  },
+
+  "optionGroups": [
+    {
+      "id": "opt_sugar",
+      "label": "Đường",
+      "type": "single",
+      "required": true,
+      "default": "100",
+      "values": [
+        { "value": "0", "label": "0%" },
+        { "value": "50", "label": "50%" },
+        { "value": "70", "label": "70%" },
+        { "value": "100", "label": "100%" }
+      ]
+    },
+    {
+      "id": "opt_ice",
+      "label": "Đá",
+      "type": "single",
+      "required": true,
+      "default": "100",
+      "values": [
+        { "value": "0", "label": "Không đá" },
+        { "value": "50", "label": "50%" },
+        { "value": "70", "label": "70%" },
+        { "value": "100", "label": "100%" }
+      ]
+    },
+    {
+      "id": "opt_matcha_grade",
+      "label": "Loại bột matcha",
+      "type": "single",
+      "required": true,
+      "default": "standard",
+      "values": [
+        { "value": "standard", "label": "Tiêu chuẩn", "priceDelta": { "M": 0, "L": 0 } },
+        { "value": "uji", "label": "Nhật Uji", "priceDelta": { "M": 5, "L": 8 } },
+        { "value": "aki", "label": "Nhật Aki", "priceDelta": { "M": 8, "L": 12 } }
+      ]
+    }
+  ],
+
+  "toppings": [
+    { "id": "thach_cu_nang", "name": "Thạch củ năng", "price": 6 },
+    { "id": "thach_dua", "name": "Thạch dừa", "price": 6 },
+    { "id": "thach_suong_sao", "name": "Thạch sương sáo", "price": 5 },
+    { "id": "thach_pho_mai", "name": "Thạch phô mai", "price": 6 },
+    { "id": "trai_cay_tuoi", "name": "Trái cây tươi", "price": 10 },
+    { "id": "kem_trung", "name": "Kem trứng", "price": 9 },
+    { "id": "kem_muoi", "name": "Kem Muối/Macchiato", "price": 9 },
+    { "id": "thach_coffee", "name": "Thạch coffee", "price": 5 },
+    { "id": "thach_trai_cay", "name": "Thạch trái cây", "price": 5 },
+    { "id": "banh_plan", "name": "Bánh Plan", "price": 6 },
+    { "id": "pudding_trung", "name": "Pudding trứng", "price": 5 },
+    { "id": "pudding_socola", "name": "Pudding socola", "price": 5 },
+    { "id": "tran_chau_den", "name": "Trân châu đen", "price": 5 },
+    { "id": "tran_chau_trang", "name": "Trân châu trắng", "price": 5 },
+    { "id": "thach_soi", "name": "Thạch sợi", "price": 5 },
+    { "id": "thap_cam_banh_flan", "name": "Topping thập cẩm bánh flan", "price": 15 }
+  ],
+
+  "toppingGroups": [
+    { "id": "default-topping-group", "name": "Tất cả topping", "all": true }
+  ],
+
+  "categories": [
+    {
+      "id": "tra_sua_chabar",
+      "name": "Trà Sữa CHABAR",
+      "items": [
+        {
+          "id": "ts_truyen_thong_full_1l",
+          "name": "TS Truyền Thống Full-Topping 1 Lít",
+          "hot": true,
+          "sizes": [
+            { "size": "S", "price": 25 },
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_thai_xanh_full_1l",
+          "name": "TS Thái Xanh Full-Topping 1 Lít",
+          "hot": true,
+          "sizes": [
+            { "size": "S", "price": 25 },
+            { "size": "M", "price": 30 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_truyen_thong",
+          "name": "TS Truyền Thống (chưa thạch)",
+          "sizes": [
+            { "size": "S", "price": 12 },
+            { "size": "M", "price": 17 },
+            { "size": "L", "price": 24 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_thai_xanh",
+          "name": "TS Thái Xanh (chưa thạch)",
+          "sizes": [
+            { "size": "S", "price": 14 },
+            { "size": "M", "price": 19 },
+            { "size": "L", "price": 26 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_thai_do",
+          "name": "TS Thái Đỏ (chưa thạch)",
+          "sizes": [
+            { "size": "M", "price": 25 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"],
+          "hot": true,
+          "note": "Giá size S không nhận dạng rõ"
+        },
+        {
+          "id": "ts_gao_rang",
+          "name": "Trà Sữa Gạo Rang (chưa thạch)",
+          "sizes": [
+            { "size": "M", "price": 24 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_thach_dao",
+          "name": "Trà Sữa Thạch Đào (có thạch đào)",
+          "sizes": [
+            { "size": "M", "price": 32 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "hong_tra_sui_bot",
+      "name": "Hồng Trà Sủi Bọt",
+      "items": [
+        {
+          "id": "hong_tra_sui_bot",
+          "name": "Hồng Trà Sủi Bọt",
+          "sizes": [
+            { "size": "S", "price": 7 },
+            { "size": "M", "price": 12 },
+            { "size": "L", "price": 17 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "luc_tra_sui_bot",
+          "name": "Lục Trà Sủi Bọt",
+          "sizes": [
+            { "size": "S", "price": 7 },
+            { "size": "M", "price": 12 },
+            { "size": "L", "price": 17 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_gao_rang_nguyen_vi",
+          "name": "Trà Gạo Rang Nguyên Vị",
+          "sizes": [
+            { "size": "M", "price": 20 },
+            { "size": "L", "price": 23 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "hong_tra_kem_trung_kem_muoi",
+      "name": "Hồng Trà Kem Trứng/Kem Muối",
+      "items": [
+        {
+          "id": "hong_tra_kem_trung_kem_muoi",
+          "name": "Hồng Trà Kem Trứng/Kem Muối",
+          "sizes": [
+            { "size": "S", "price": 16 },
+            { "size": "M", "price": 21 },
+            { "size": "L", "price": 26 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_nhai_kem_trung_kem_muoi",
+          "name": "Trà Nhài Kem Trứng/Kem Muối",
+          "sizes": [
+            { "size": "M", "price": 21 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_gao_rang_kem_trung_kem_muoi",
+          "name": "Trà Gạo Rang Kem Trứng/Kem Muối",
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "matcha_latte",
+      "name": "Matcha Latte",
+      "items": [
+        {
+          "id": "matcha_sua_hat_oatside",
+          "name": "Matcha Sữa Hạt Oatside",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 28 },
+            { "size": "L", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice","opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_sua_tuoi",
+          "name": "Matcha Sữa Tươi",
+          "sizes": [
+            { "size": "M", "price": 28 },
+            { "size": "L", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice","opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_sua_gau",
+          "name": "Matcha Sữa Gấu",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 35 },
+            { "size": "L", "price": 45 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice","opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_xoai",
+          "name": "Matcha Xoài",
+          "sizes": [
+            { "size": "M", "price": 32 },
+            { "size": "L", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice","opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_dau_tay",
+          "name": "Matcha Dâu Tây",
+          "sizes": [
+            { "size": "M", "price": 32 },
+            { "size": "L", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice","opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_sua_chuoi",
+          "name": "Matcha Sữa Chuối",
+          "sizes": [
+            { "size": "M", "price": 32 },
+            { "size": "L", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice","opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "cacao_heyday",
+      "name": "Cacao Heyday",
+      "items": [
+        {
+          "id": "cacao_sua_hat_oatside",
+          "name": "Cacao Sữa Hạt Oatside",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 28 },
+            { "size": "L", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_sua_tuoi",
+          "name": "Cacao Sữa Tươi",
+          "sizes": [
+            { "size": "M", "price": 28 },
+            { "size": "L", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_sua_chuoi",
+          "name": "Cacao Sữa Chuối",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 35 },
+            { "size": "L", "price": 45 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_kem_muoi",
+          "name": "Cacao Kem Muối",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 37 },
+            { "size": "L", "price": 47 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_dau",
+          "name": "Cacao Dâu",
+          "sizes": [
+            { "size": "M", "price": 32 },
+            { "size": "L", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_sua_gau",
+          "name": "Cacao Sữa Gấu",
+          "sizes": [
+            { "size": "M", "price": 35 },
+            { "size": "L", "price": 45 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "tra_trai_cay",
+      "name": "Trà Trái Cây",
+      "items": [
+        {
+          "id": "tra_nhiet_doi",
+          "name": "Trà Nhiệt Đới",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_dau_cam",
+          "name": "Trà Dâu Cam",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_xoai_chanh_leo",
+          "name": "Trà Xoài Chanh Leo",
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_mang_cau",
+          "name": "Trà Mãng Cầu",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_nhan_thai_lan",
+          "name": "Trà Nhãn Thái Lan",
+          "sizes": [
+            { "size": "L", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"],
+          "note": "Chỉ có size L trên menu"
+        },
+        {
+          "id": "tra_tao_bac_ha",
+          "name": "Trà Táo Bạc Hà",
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_dao_dam",
+          "name": "Trà Đào Dầm",
+          "sizes": [
+            { "size": "M", "price": 19 },
+            { "size": "L", "price": 24 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_dau_tam",
+          "name": "Trà Dâu Tằm",
+          "sizes": [
+            { "size": "M", "price": 19 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_oi_hong",
+          "name": "Trà Ổi Hồng",
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_dao_mieng",
+          "name": "Trà Đào Miếng",
+          "sizes": [
+            { "size": "M", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "dark_lava",
+      "name": "Dark Lava Viền Socola",
+      "note": "Ngon hơn khi dùng kèm kem muối",
+      "items": [
+        {
+          "id": "dark_bac_ha",
+          "name": "Dark Bạc Hà",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 37, "note": "700ml" }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "dark_truyen_thong",
+          "name": "Dark Truyền Thống",
+          "hot": true,
+          "sizes": [
+            { "size": "M", "price": 37 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "dark_socola",
+          "name": "Dark Socola",
+          "sizes": [
+            { "size": "M", "price": 37 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "dark_socola_bac_ha",
+          "name": "Dark Socola Bạc Hà",
+          "isNew": true,
+          "sizes": [
+            { "size": "M", "price": 43 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "coffee_phin_suong_sao",
+      "name": "Coffee Phin Sương Sáo",
+      "items": [
+        {
+          "id": "cafe_sua_dua_suong_sao",
+          "name": "Cà Phê Sữa Dừa Sương Sáo",
+          "sizes": [
+            { "size": "M", "price": 29 },
+            { "size": "L", "price": 35 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cafe_sua_tuoi_suong_sao",
+          "name": "Cà Phê Sữa Tươi Sương Sáo",
+          "sizes": [
+            { "size": "L", "price": 27 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "sua_tuoi_suong_sao",
+          "name": "Sữa Tươi Sương Sáo",
+          "sizes": [
+            { "size": "L", "price": 24 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "coffee_phin",
+      "name": "Coffee Phin",
+      "sizes_note": "S: 360ml | M: 500ml | L: 700ml",
+      "items": [
+        {
+          "id": "cafe_sua_da",
+          "name": "Cà Phê Sữa Đá",
+          "sizes": [
+            { "size": "S", "price": 16 },
+            { "size": "M", "price": 23 },
+            { "size": "L", "price": 30 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cafe_da",
+          "name": "Cà Phê Đá",
+          "sizes": [
+            { "size": "S", "price": 15 },
+            { "size": "M", "price": 22 },
+            { "size": "L", "price": 28 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cafe_sua_tuoi",
+          "name": "Cà Phê Sữa Tươi",
+          "sizes": [
+            { "size": "M", "price": 20 },
+            { "size": "L", "price": 25 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cafe_sua_hat_oatside",
+          "name": "Cà Phê Sữa Hạt Oatside",
+          "sizes": [
+            { "size": "M", "price": 26 },
+            { "size": "L", "price": 32 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cafe_sua_gau",
+          "name": "Cà Phê Sữa Gấu",
+          "sizes": [
+            { "size": "M", "price": 25 },
+            { "size": "L", "price": 30 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cafe_kem_deo_buon_me",
+          "name": "Cà Phê Kem Déo Buôn Mê",
+          "sizes": [
+            { "size": "S", "price": 23 },
+            { "size": "M", "price": 30 },
+            { "size": "L", "price": 36 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cafe_muoi",
+          "name": "Cà Phê Muối",
+          "sizes": [
+            { "size": "S", "price": 18 },
+            { "size": "M", "price": 25 },
+            { "size": "L", "price": 30 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "coffee_special",
+      "name": "Coffee Đặc Biệt",
+      "items": [
+        {
+          "id": "coffee_sua_thai",
+          "name": "Coffee Sữa Thái",
+          "sizes": [
+            { "size": "M", "price": 25 },
+            { "size": "L", "price": 33 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "coffee_mix_cha_thai",
+          "name": "Coffee Mix Cha Thái",
+          "sizes": [
+            { "size": "S", "price": 20 },
+            { "size": "M", "price": 26 },
+            { "size": "L", "price": 30 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "thai_do_hoang_kim",
+          "name": "Thái Đỏ Hoàng Kim",
+          "sizes": [
+            { "size": "M", "price": 25 },
+            { "size": "L", "price": 32 },
+            { "size": "XL", "price": 30 }
+          ],
+          "optionGroupIds": ["opt_sugar","opt_ice"],
+          "toppingGroupIds": ["default-topping-group"],
+          "note": "Giá size XL không nhận dạng rõ"
+        }
+      ]
+    }
+  ]
+}

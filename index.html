@@ -1,0 +1,4638 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHABAR — Order System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg: #FAF6E8;
+  --bg-2: #F2EBD0;
+  --surface: #FFFFFF;
+  --surface-2: #FFFDF5;
+  --ink: #1A1A1A;
+  --ink-2: #4A4A4A;
+  --muted: #8A8A8A;
+  --line: #E8E2C8;
+  --line-strong: #D4CCAA;
+  --accent: #1E3A8A;
+  --accent-hover: #15296b;
+  --accent-2: #FFE574;
+  --hot: #E85D2F;
+  --new: #D63838;
+  --ok: #2D8659;
+  --warn: #C77B1A;
+  --danger: #C0392B;
+  --pin: #D97706;
+  --shadow-sm: 0 1px 2px rgba(26,26,26,0.06);
+  --shadow: 0 2px 8px rgba(26,26,26,0.08);
+  --shadow-lg: 0 8px 24px rgba(26,26,26,0.12);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* === LAYOUT === */
+.app {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  grid-template-rows: 56px 1fr;
+  height: 100vh;
+}
+
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  box-shadow: var(--shadow);
+  z-index: 10;
+}
+.topbar .logo {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.5px;
+}
+.topbar .logo .accent { color: var(--accent-2); }
+.topbar .tagline { font-size: 12px; color: rgba(255,255,255,0.7); margin-left: -8px; }
+.topbar .spacer { flex: 1; }
+.topbar .top-tabs { display: flex; gap: 4px; }
+.topbar .top-tab {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  transition: all 0.15s;
+}
+.topbar .top-tab:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.topbar .top-tab.active { background: var(--accent-2); color: var(--ink); }
+.topbar .top-tab .badge {
+  display: inline-block;
+  background: rgba(0,0,0,0.15);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+.menu-panel {
+  overflow-y: auto;
+  padding: 16px 20px 80px;
+  background: var(--bg);
+}
+
+.cart-panel {
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* === MENU PANEL === */
+.search-bar {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+  z-index: 5;
+}
+.search-bar input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-bar input:focus { border-color: var(--accent); }
+
+.cat-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding-bottom: 2px;
+}
+.cat-nav button {
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.cat-nav button:hover { border-color: var(--accent); }
+.cat-nav button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.category { margin-bottom: 28px; }
+.category h2 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.category h2::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: var(--accent-2);
+  border-radius: 2px;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.item-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  position: relative;
+}
+.item-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.item-card .name {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.item-card .price-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.item-card .price-tag {
+  font-size: 11px;
+  background: var(--bg-2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.item-card .badges {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+.badge-hot, .badge-new {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+.badge-hot { background: var(--hot); }
+.badge-new { background: var(--new); }
+
+/* === CART PANEL === */
+.cart-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 8px 0;
+  overflow-x: auto;
+  background: var(--bg-2);
+  min-height: 44px;
+  align-items: flex-end;
+}
+.cart-tab {
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 2px;
+  transition: all 0.15s;
+}
+.cart-tab:hover { background: var(--surface-2); color: var(--ink); }
+.cart-tab.active {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+  border-bottom-color: var(--surface);
+  margin-bottom: -1px;
+}
+.cart-tab .pin {
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.cart-tab .pin.active { color: var(--pin); }
+.cart-tab .pin:hover { background: rgba(217,119,6,0.15); }
+.cart-tab .close {
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: var(--muted);
+}
+.cart-tab .close:hover { background: rgba(0,0,0,0.1); color: var(--danger); }
+.cart-tab .close.disabled { opacity: 0.3; cursor: not-allowed; }
+.cart-tab.add-cart {
+  background: var(--accent);
+  color: #fff;
+  font-size: 18px;
+  padding: 6px 12px;
+  border-radius: 6px 6px 0 0;
+}
+.cart-tab.add-cart:hover { background: var(--accent-hover); color: #fff; }
+
+.cart-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--line);
+}
+.cart-id {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+.cart-status {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status-draft        { background: var(--bg-2);  color: var(--ink-2); }
+.status-paid         { background: #DBEAFE;      color: #1E40AF; }
+.status-delivered    { background: #FEF3C7;      color: var(--warn); }
+.status-completed    { background: #D1FAE5;      color: var(--ok); }
+.status-cancelled    { background: #FEE2E2;      color: var(--danger); }
+
+/* Flag indicators (sub-badges showing which flag is set) */
+.flag-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.flag-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.flag-chip.on {
+  background: #D1FAE5;
+  color: var(--ok);
+  border-color: #86EFAC;
+}
+
+.cart-customer {
+  margin-bottom: 12px;
+}
+.cart-customer input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+.line {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.line .line-name {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+  padding-right: 26px;
+}
+.line .line-meta {
+  font-size: 11px;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+.line .line-toppings {
+  font-size: 11px;
+  color: var(--ink-2);
+  font-style: italic;
+}
+.line .line-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.qty-ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px;
+}
+.qty-ctl button {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent);
+}
+.qty-ctl button:hover { background: var(--bg-2); }
+.qty-ctl span {
+  min-width: 22px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+.line-price {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.line-total {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 14px;
+}
+.line-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+}
+.line-remove:hover { background: #FEE2E2; color: var(--danger); }
+.line-remove-confirm {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--danger);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.line-edit {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: underline;
+  margin-top: 4px;
+}
+
+.empty-cart {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.cart-footer {
+  border-top: 1px solid var(--line);
+  padding: 12px;
+  background: var(--surface-2);
+}
+.totals { margin-bottom: 10px; }
+.totals .total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: var(--ink-2);
+}
+.totals .total-row.grand {
+  font-size: 17px;
+  font-weight: 700;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  color: var(--ink);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+}
+.totals .total-row.grand .val { color: var(--accent); }
+
+.discount-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  align-items: center;
+}
+.discount-row label { color: var(--ink-2); white-space: nowrap; }
+.discount-row input {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  text-align: right;
+  font-size: 12px;
+}
+.discount-row select {
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 12px;
+  background: var(--surface);
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.action-row.full { grid-template-columns: 1fr; }
+.btn {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 13px;
+  border: 1.5px solid transparent;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-flag { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+.btn-flag:hover { background: var(--bg-2); border-color: var(--accent); }
+.btn-flag.on {
+  background: var(--ok);
+  color: #fff;
+  border-color: var(--ok);
+}
+.btn-flag.on:hover { background: #226843; border-color: #226843; }
+.btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+.btn-secondary:hover { background: var(--bg-2); }
+.btn-danger-outline { background: var(--surface); color: var(--danger); border-color: #FCA5A5; }
+.btn-danger-outline:hover { background: #FEE2E2; }
+.btn-ghost { background: transparent; color: var(--ink-2); }
+.btn-ghost:hover { background: var(--bg-2); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* === ORDERS LIST VIEW === */
+.orders-view {
+  position: absolute;
+  inset: 56px 0 0 0;
+  background: var(--bg);
+  z-index: 5;
+  overflow-y: auto;
+  padding: 20px;
+  display: none;
+}
+.orders-view.show { display: block; }
+.orders-view h1 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  margin-bottom: 16px;
+}
+.order-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.order-filters button {
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.order-filters button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.order-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.order-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.order-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+.order-card .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.order-card .oid {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.order-card .meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.order-card .lines-summary {
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.order-card .total {
+  font-weight: 700;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  color: var(--accent);
+  font-size: 16px;
+}
+
+/* === MODAL === */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-bg.show { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-head h3 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+}
+.modal-head button {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  font-size: 20px;
+  color: var(--muted);
+}
+.modal-head button:hover { background: var(--bg-2); color: var(--ink); }
+.modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-foot {
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+}
+.modal-foot-qty {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.modal-foot-qty button {
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-foot-qty button:hover { border-color: var(--accent); }
+.modal-foot-qty span {
+  min-width: 28px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+.modal-foot-price {
+  flex: 1;
+  text-align: center;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--accent);
+}
+.modal-foot-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.opt-section { margin-bottom: 16px; }
+.opt-section h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.opt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.opt-chip {
+  padding: 8px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.opt-chip:hover { border-color: var(--accent); }
+.opt-chip.selected {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.opt-chip .delta {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.topping-group-section {
+  margin-bottom: 14px;
+}
+.topping-group-section h5 {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--line);
+}
+.topping-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.topping-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: all 0.15s;
+  cursor: pointer;
+  font-size: 12px;
+}
+.topping-item:hover { border-color: var(--accent); }
+.topping-item.selected {
+  border-color: var(--accent);
+  background: #EBF0FB;
+}
+.topping-item .name { font-weight: 500; }
+.topping-item .price {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 11px;
+}
+.topping-help {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.qty-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-2);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.qty-section .label { font-weight: 600; }
+.qty-section .qty-ctl button { width: 32px; height: 32px; font-size: 18px; }
+.qty-section .qty-ctl span { min-width: 30px; font-size: 16px; }
+
+.note-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  resize: vertical;
+  min-height: 50px;
+}
+
+.subtotal-display {
+  background: var(--bg-2);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.subtotal-display .val {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--accent);
+}
+
+/* === TOAST === */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.2s;
+  z-index: 200;
+  pointer-events: none;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* === MENU LOAD WARNING === */
+.menu-error {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.menu-error strong { display: block; margin-bottom: 2px; }
+.menu-error code {
+  background: rgba(0,0,0,0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: ui-monospace, monospace;
+}
+
+/* === SCROLLBARS === */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 1fr 340px; }
+}
+
+/* Mobile-only summary bar - hidden by default (desktop) */
+.mobile-summary {
+  display: none;
+}
+
+/* Mobile-only collapse button - hidden by default */
+.mobile-collapse-btn {
+  display: none;
+}
+
+/* ============== MOBILE LAYOUT (≤ 768px) ============== */
+@media (max-width: 768px) {
+  html, body { overflow: hidden; }
+
+  /* Top-level grid: topbar + main */
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px 1fr;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar .tagline { display: none; }
+  .topbar .top-tab { padding: 6px 10px; font-size: 12px; }
+
+  /* Hide the desktop menu panel entirely — we use cart-body for menu on mobile */
+  .menu-panel { display: none; }
+
+  /* Cart panel takes the full viewport below topbar.
+     Internal grid keeps tabs at top, body in middle (scrollable),
+     summary fixed at bottom WITHOUT position:fixed. */
+  .cart-panel {
+    position: static;
+    border-left: none;
+    width: auto;
+    max-width: none;
+    transform: none;
+    transition: none;
+    box-shadow: none;
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* Cart tabs: wrap multiple lines, don't scroll horizontally */
+  .cart-tabs {
+    overflow-x: visible;
+    flex-wrap: wrap;
+    padding: 6px 6px 0;
+    gap: 4px 2px;
+    min-height: auto;
+    align-items: center;
+  }
+  .cart-tab {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  .cart-tab.active { margin-bottom: 0; border-bottom-color: var(--line); }
+
+  /* Cart body = scrollable middle area. Either holds the mobile menu (draft)
+     or is empty (when cart is non-draft and detail panel is always-on). */
+  .cart-body {
+    padding: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+  }
+
+  /* === Mobile menu inside cart-body === */
+  .mobile-menu-area {
+    padding: 0;
+  }
+  /* Sticky search + categories at top of menu scroll area */
+  .mobile-menu-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--bg);
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-menu-toolbar .search-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    outline: none;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .mobile-menu-toolbar .search-input:focus { border-color: var(--accent); }
+  .mobile-menu-toolbar .cat-nav-mobile {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin: 0;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .mobile-menu-toolbar .cat-nav-mobile::-webkit-scrollbar { display: none; }
+  .mobile-menu-toolbar .cat-nav-mobile button {
+    padding: 5px 11px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .mobile-menu-toolbar .cat-nav-mobile button.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .mobile-menu-content {
+    padding: 12px;
+    padding-bottom: 24px;
+  }
+  .mobile-menu-content .category h2 { font-size: 16px; }
+  .mobile-menu-content .items-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mobile-menu-content .item-card {
+    padding: 10px;
+    gap: 6px;
+  }
+  .mobile-menu-content .item-card .name { font-size: 12px; }
+  .mobile-menu-content .item-card .price-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  /* === Mobile summary bar (the 3rd grid row of cart-panel) === */
+  .mobile-summary {
+    display: block;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+    flex-shrink: 0;
+  }
+  .mobile-summary-lines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 12px 8px;
+    max-height: 86px;
+    overflow-y: auto;
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-summary-lines:empty {
+    display: none;
+  }
+  .summary-label {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    padding: 3px 9px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    flex-shrink: 0;
+  }
+  .summary-chip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 4px;
+    padding: 4px 12px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-2);
+    max-width: 100%;
+    word-break: break-word;
+  }
+  .summary-chip .qty {
+    color: var(--hot);
+    font-weight: 700;
+  }
+
+  .mobile-pay-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 24px);
+    margin: 10px 12px 14px;
+    padding: 14px 18px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: var(--shadow);
+    transition: all 0.15s;
+  }
+  .mobile-pay-btn:active { transform: scale(0.98); }
+  .mobile-pay-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .mobile-pay-btn .left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mobile-pay-btn .icon { font-size: 18px; }
+  .mobile-pay-btn .total {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 17px;
+    letter-spacing: 0.3px;
+  }
+
+  /* When there's no cart or summary should be hidden (e.g. cart non-draft) */
+  .mobile-summary.hidden { display: none; }
+
+  /* === Mobile detail panel (slides up over menu+summary) === */
+  .mobile-detail-panel {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: 0;
+    top: calc(56px + var(--cart-tabs-h, 50px));
+    background: var(--surface);
+    z-index: 40;
+    transform: translateY(100%);
+    transition: transform 0.25s ease-out;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-detail-panel.expanded {
+    transform: translateY(0);
+  }
+  /* Suppress animation during programmatic tab switches */
+  .mobile-detail-panel.no-transition {
+    transition: none;
+  }
+  /* When cart is non-draft, panel is permanently expanded (replaces menu entirely) */
+  .mobile-detail-panel.always-on {
+    transform: translateY(0);
+    transition: none;
+    z-index: 5;
+    box-shadow: none;
+  }
+
+  .mobile-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 28px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mobile-collapse-btn:hover { background: var(--line); }
+  .mobile-collapse-btn::before {
+    content: '⌄';
+    font-weight: 700;
+    margin-right: 6px;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .mobile-detail-panel.always-on .mobile-collapse-btn {
+    display: none;
+  }
+
+  .mobile-detail-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px;
+    padding-bottom: 16px;
+    min-height: 0;
+  }
+  .mobile-detail-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--line);
+    padding: 10px 12px 14px;
+    background: var(--surface-2);
+  }
+
+  /* Modal: smaller padding on mobile */
+  .modal-bg { padding: 12px; }
+  .modal { max-height: 92vh; }
+  .modal-body { padding: 12px 16px; }
+
+  /* Hide desktop cart footer on mobile */
+  .cart-panel > .cart-footer {
+    display: none;
+  }
+
+  /* Orders view: 1 column */
+  .order-list { grid-template-columns: 1fr; }
+}
+
+/* === PRINT — K80 (80mm receipt) === */
+@media print {
+  @page { size: 80mm auto; margin: 0; }
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area {
+    position: fixed;
+    top: 0; left: 0;
+    width: 80mm;
+    padding: 4mm 4mm 8mm;
+    font-family: 'Be Vietnam Pro', monospace;
+    font-size: 11pt;
+    color: #000;
+    background: #fff;
+    line-height: 1.4;
+  }
+  #print-area .r-header { text-align: center; margin-bottom: 4mm; }
+  #print-area .r-shop {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 18pt;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+  #print-area .r-tagline { font-size: 9pt; }
+  #print-area .r-meta { font-size: 9pt; margin-bottom: 1mm; }
+  #print-area .r-divider {
+    border-top: 1px dashed #000;
+    margin: 2mm 0;
+  }
+  #print-area .r-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 13pt;
+    margin: 2mm 0;
+  }
+  #print-area .r-line { margin-bottom: 2mm; }
+  #print-area .r-line-head {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+  }
+  #print-area .r-line-detail {
+    font-size: 9pt;
+    padding-left: 2mm;
+  }
+  #print-area .r-totals { margin-top: 2mm; }
+  #print-area .r-total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1mm;
+  }
+  #print-area .r-total-row.grand {
+    font-weight: 800;
+    font-size: 14pt;
+    margin-top: 2mm;
+    padding-top: 2mm;
+    border-top: 1px solid #000;
+  }
+  #print-area .r-footer {
+    text-align: center;
+    margin-top: 4mm;
+    font-size: 9pt;
+  }
+  #print-area .r-bar-item {
+    margin-bottom: 3mm;
+    padding: 2mm;
+    border: 1px solid #000;
+    border-radius: 2mm;
+  }
+  #print-area .r-bar-item .name {
+    font-weight: 800;
+    font-size: 13pt;
+  }
+  #print-area .r-bar-item .detail {
+    font-size: 10pt;
+    margin-top: 1mm;
+  }
+}
+#print-area { display: none; }
+@media print { #print-area { display: block; } }
+
+/* === SETTINGS VIEW === */
+.settings-view {
+  position: absolute;
+  inset: 56px 0 0 0;
+  background: var(--bg);
+  overflow-y: auto;
+  padding: 20px 24px 60px;
+  display: none;
+}
+.settings-view.show { display: block; }
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.settings-header h1 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  flex: 1;
+}
+.settings-export-btn {
+  background: var(--ok) !important;
+  color: #fff !important;
+  border-color: var(--ok) !important;
+}
+.settings-export-btn:hover { opacity: 0.85; }
+.settings-tab-nav {
+  display: flex;
+  gap: 2px;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+.settings-tab-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: all 0.15s;
+  background: none;
+  cursor: pointer;
+}
+.settings-tab-btn:hover { color: var(--ink); }
+.settings-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.settings-content { max-width: 800px; }
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.settings-section-header h2 {
+  font-size: 12px;
+  font-weight: 700;
+  flex: 1;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.settings-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.settings-row {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-row .row-main { flex: 1; min-width: 0; }
+.settings-row .row-name { font-weight: 600; font-size: 13px; }
+.settings-row .row-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.settings-row .row-price { font-size: 13px; color: var(--ink-2); font-weight: 500; flex-shrink: 0; }
+.settings-row .row-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.btn-sm { padding: 5px 10px !important; font-size: 12px !important; }
+.btn-danger-ghost { background: transparent; color: var(--danger); border-color: transparent; }
+.btn-danger-ghost:hover { background: #FEE2E2; }
+.settings-form {
+  background: var(--surface-2);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 8px;
+}
+.settings-form .form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.settings-form label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  display: block;
+  margin-bottom: 4px;
+}
+.settings-form input[type=text],
+.settings-form input[type=number],
+.settings-form select {
+  padding: 7px 10px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+  font-size: 13px;
+  width: 100%;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.settings-form input:focus, .settings-form select:focus { border-color: var(--accent); }
+.form-field { flex: 1; min-width: 140px; }
+.form-field-sm { flex: 0 0 auto; min-width: 90px; }
+.form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.settings-check-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  background: var(--surface);
+}
+.settings-check-list label {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 400 !important;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.sizes-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; }
+.size-row { display: flex; gap: 6px; align-items: center; }
+.size-row input { flex: 1; min-width: 0; }
+.shop-info-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .shop-info-form { grid-template-columns: 1fr; } }
+.shop-save-bar { display: flex; justify-content: flex-end; margin-top: 8px; }
+.settings-cat-block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.settings-cat-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.settings-cat-header:hover { background: var(--bg-2); }
+.settings-cat-header .cat-name { flex: 1; font-weight: 700; font-size: 14px; }
+.settings-cat-chevron { font-size: 10px; color: var(--muted); transition: transform 0.2s; display: inline-block; }
+.settings-cat-block.open .settings-cat-chevron { transform: rotate(90deg); }
+.settings-cat-body { display: none; padding: 8px 12px 12px; border-top: 1px solid var(--line); }
+.settings-cat-block.open .settings-cat-body { display: block; }
+.sf-radio-row { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.sf-radio-row label { display: flex !important; align-items: center; gap: 6px; font-weight: 400 !important; cursor: pointer; }
+.settings-note { font-size: 12px; color: var(--muted); margin-bottom: 16px; padding: 8px 12px; background: var(--bg-2); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-2); }
+/* Printer settings */
+.ps-radio { display:flex !important; align-items:center; gap:6px; font-weight:400 !important; cursor:pointer; }
+.ps-printer-select { width:100%; padding:7px 10px; border:1.5px solid var(--line-strong); border-radius:var(--radius-sm); background:var(--surface); font-size:13px; font-family:inherit; }
+/* Settings drag-and-drop */
+.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+  font-size: 14px;
+  flex-shrink: 0;
+  user-select: none;
+  opacity: 0.35;
+  padding: 0 2px;
+  line-height: 1;
+  transition: opacity 0.1s;
+}
+.drag-handle:hover { opacity: 0.85; }
+.settings-row.dragging { opacity: 0.35; }
+.settings-cat-block.dragging { opacity: 0.35; }
+.settings-row.drag-above { border-top: 2px solid var(--accent) !important; }
+.settings-row.drag-below { border-bottom: 2px solid var(--accent) !important; }
+.settings-cat-block.drag-above { border-top: 2px solid var(--accent) !important; }
+.settings-cat-block.drag-below { border-bottom: 2px solid var(--accent) !important; }
+.settings-cat-header.drag-over-cat { outline: 2px dashed var(--accent); outline-offset: -3px; background: var(--surface-2) !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="logo">CHA<span class="accent">BAR</span></div>
+    <div class="tagline">Order System</div>
+    <div class="spacer"></div>
+    <nav class="top-tabs">
+      <button class="top-tab active" data-view="order">Order</button>
+      <button class="top-tab" data-view="orders">Đơn hàng <span class="badge" id="orders-badge">0</span></button>
+      <button class="top-tab" data-view="settings">⚙</button>
+    </nav>
+  </header>
+
+  <main class="menu-panel" id="menu-panel">
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="🔍 Tìm món...">
+    </div>
+    <div class="cat-nav" id="cat-nav"></div>
+    <div id="menu-content"></div>
+  </main>
+
+  <aside class="cart-panel" id="cart-panel">
+    <div class="cart-tabs" id="cart-tabs"></div>
+    <div class="cart-body" id="cart-body"></div>
+    <div class="cart-footer" id="cart-footer"></div>
+    <!-- Mobile-only: summary bar at bottom (hidden on desktop via CSS) -->
+    <div class="mobile-summary" id="mobile-summary">
+      <div class="mobile-summary-lines" id="mobile-summary-lines"></div>
+      <button class="mobile-pay-btn" id="mobile-pay-btn" disabled>
+        <span class="left">
+          <span class="icon">🛒</span>
+          <span id="mobile-pay-label">Thanh toán · 0 ly</span>
+        </span>
+        <span class="total" id="mobile-pay-total">0đ</span>
+      </button>
+    </div>
+  </aside>
+
+  <section class="orders-view" id="orders-view">
+    <h1>Đơn hàng</h1>
+    <div class="order-filters" id="order-filters">
+      <button class="active" data-filter="all">Tất cả</button>
+      <button data-filter="paid">Đã thanh toán</button>
+      <button data-filter="delivered">Đã giao</button>
+      <button data-filter="completed">Hoàn thành</button>
+      <button data-filter="cancelled">Đã hủy</button>
+    </div>
+    <div class="order-list" id="order-list"></div>
+  </section>
+
+  <section class="settings-view" id="settings-view"></section>
+</div>
+
+<!-- Mobile detail panel (slides up from bottom) -->
+<div class="mobile-detail-panel" id="mobile-detail-panel">
+  <button class="mobile-collapse-btn" id="mobile-collapse-btn">Thu nhỏ</button>
+  <div class="mobile-detail-content" id="mobile-detail-content"></div>
+  <div class="mobile-detail-footer" id="mobile-detail-footer"></div>
+</div>
+
+<!-- Item config modal -->
+<div class="modal-bg" id="item-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Tùy chọn món</h3>
+      <button id="modal-close">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot">
+      <div class="modal-foot-qty" id="modal-foot-qty"></div>
+      <div class="modal-foot-price" id="modal-foot-price"></div>
+      <div class="modal-foot-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Hủy</button>
+        <button class="btn btn-primary" id="modal-add">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="print-area"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================== CHABAR ORDER SYSTEM ================== */
+(function() {
+'use strict';
+
+// ============== STATE ==============
+let MENU = null;
+let PRICE_UNIT = 1000;
+
+let state = {
+  carts: [],          // active carts (any not completed/cancelled)
+  archived: [],       // completed + cancelled
+  activeCartId: null,
+  view: 'order',
+  orderFilter: 'all',
+  search: '',
+  catFilter: null,
+  mobileDetailExpanded: new Set()  // mobile-only: set of cartIds whose detail panel is expanded
+};
+
+const STORAGE_KEY = 'chabar_pos_state_v2';
+const MENU_OVERRIDE_KEY = 'chabar_menu_override';
+const PRINT_SETTINGS_KEY = 'chabar_print_settings';
+
+let settingsState = {
+  tab: 'shop',
+  editing: null,   // { section, id }
+  addingIn: null,  // { section, catId? }
+  expandedCat: null
+};
+let _dndSrc = null, _dndOverEl = null, _dndInsertBefore = true;
+let _barTicketFont = null; // cached base64 font cho jsPDF
+
+let printSettings = null; // lazy-loaded từ localStorage
+function getPrintSettings() {
+  if (printSettings) return printSettings;
+  try { printSettings = JSON.parse(localStorage.getItem(PRINT_SETTINGS_KEY)); } catch {}
+  if (!printSettings) printSettings = {
+    serverUrl: 'http://localhost:3000',
+    receipt:   { mode: 'dialog', printer: '' },
+    barTicket: { mode: 'dialog', printer: '' }
+  };
+  return printSettings;
+}
+function savePrintSettings() {
+  localStorage.setItem(PRINT_SETTINGS_KEY, JSON.stringify(printSettings));
+}
+
+// ============== UTIL ==============
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+// Format price (number in JSON unit) -> display string with PRICE_UNIT applied
+function fmtPrice(n) {
+  return new Intl.NumberFormat('vi-VN').format(Math.round(n * PRICE_UNIT));
+}
+function uid(prefix) {
+  return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+}
+
+/**
+ * Generate a display order code: XXX-YY (3 digits, hyphen, 2 uppercase letters)
+ * Ensures uniqueness across all current carts + today's archived orders.
+ */
+function genDisplayCode() {
+  const today = new Date().toDateString();
+  const used = new Set();
+  for (const c of state.carts) if (c.displayCode) used.add(c.displayCode);
+  for (const c of state.archived) {
+    if (c.displayCode && new Date(c.createdAt).toDateString() === today) used.add(c.displayCode);
+  }
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const digits = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const letters = String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+                    String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const code = digits + '-' + letters;
+    if (!used.has(code)) return code;
+  }
+  // Extreme fallback: append timestamp suffix
+  return Math.floor(Math.random()*1000).toString().padStart(3,'0') + '-' + 'ZZ';
+}
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function removeAccents(s) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+}
+
+// ============== STORAGE ==============
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      carts: state.carts,
+      archived: state.archived,
+      activeCartId: state.activeCartId
+    }));
+  } catch (e) { console.error('Save failed', e); }
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    state.carts = data.carts || [];
+    state.archived = data.archived || [];
+    state.activeCartId = data.activeCartId || null;
+  } catch (e) { console.error('Load failed', e); }
+}
+
+function saveMenuOverride() {
+  try { localStorage.setItem(MENU_OVERRIDE_KEY, JSON.stringify(MENU)); }
+  catch(e) { console.error('Menu save failed', e); }
+}
+
+function exportMenuJson() {
+  // Custom formatter: blank lines between top-level sections,
+  // simple objects (no nested arrays) compacted to one line per item.
+  const PAD = '  ';
+  function isLeafObj(o) {
+    return o !== null && typeof o === 'object' && !Array.isArray(o) &&
+      Object.values(o).every(v => v === null || typeof v !== 'object' || (!Array.isArray(v) && isLeafObj(v)));
+  }
+  function fmtInline(v) {
+    if (v === null || typeof v !== 'object') return JSON.stringify(v);
+    if (Array.isArray(v)) return '[' + v.map(fmtInline).join(', ') + ']';
+    return '{ ' + Object.keys(v).map(k => JSON.stringify(k) + ': ' + fmtInline(v[k])).join(', ') + ' }';
+  }
+  function fmtVal(v, d) {
+    if (v === null || typeof v !== 'object') return JSON.stringify(v);
+    if (Array.isArray(v)) {
+      if (!v.length) return '[]';
+      const ind = PAD.repeat(d), ci = PAD.repeat(d + 1);
+      if (v.every(el => el === null || typeof el !== 'object')) return JSON.stringify(v);
+      if (v.every(isLeafObj)) return '[\n' + v.map(el => ci + fmtInline(el)).join(',\n') + '\n' + ind + ']';
+      return '[\n' + v.map(el => ci + fmtVal(el, d + 1)).join(',\n') + '\n' + ind + ']';
+    }
+    const ks = Object.keys(v);
+    if (!ks.length) return '{}';
+    const ind = PAD.repeat(d), ci = PAD.repeat(d + 1);
+    return '{\n' + ks.map(k => ci + JSON.stringify(k) + ': ' + fmtVal(v[k], d + 1)).join(',\n') + '\n' + ind + '}';
+  }
+  const ks = Object.keys(MENU);
+  const sections = ks.map((k, i) => '  ' + JSON.stringify(k) + ': ' + fmtVal(MENU[k], 1) + (i < ks.length - 1 ? ',' : ''));
+  const json = '{\n' + sections.join('\n\n') + '\n}';
+  const blob = new Blob([json], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'menu.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Đã xuất menu.json');
+}
+
+function slugify(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/đ/g,'d').replace(/Đ/g,'D')
+    .toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+}
+
+function readSizesFromForm() {
+  const list = $('#sf-item-sizes');
+  if (!list) return [];
+  return Array.from(list.querySelectorAll('.sf-size-row')).map(r => ({
+    size: r.querySelector('.sf-size-size').value.trim(),
+    price: parseFloat(r.querySelector('.sf-size-price').value) || 0
+  })).filter(s => s.size);
+}
+
+function readCheckedValues(selector) {
+  return Array.from($$(selector)).filter(cb => cb.checked).map(cb => cb.value);
+}
+
+function readOptValsFromForm() {
+  const list = $('#sf-optval-list');
+  if (!list) return [];
+  return Array.from(list.querySelectorAll('.sf-optval-row')).map(r => {
+    const val = {
+      value: r.querySelector('.sf-optval-value').value.trim(),
+      label: r.querySelector('.sf-optval-label').value.trim()
+    };
+    const delta = r.querySelector('.sf-optval-delta').value.trim();
+    if (delta) {
+      if (delta.startsWith('{')) {
+        try { val.priceDelta = JSON.parse(delta); } catch(e) { val.priceDelta = parseFloat(delta)||undefined; }
+      } else {
+        const n = parseFloat(delta);
+        if (!isNaN(n) && n !== 0) val.priceDelta = n;
+      }
+    }
+    return val;
+  }).filter(v => v.value && v.label);
+}
+
+// ============== MENU LOAD ==============
+async function loadMenu() {
+  try {
+    const override = localStorage.getItem(MENU_OVERRIDE_KEY);
+    if (override) { MENU = JSON.parse(override); return { source: 'override' }; }
+  } catch(e) { /* fallthrough */ }
+  try {
+    const res = await fetch('menu.json', { cache: 'no-store' });
+    if (res.ok) {
+      MENU = await res.json();
+      return { source: 'file' };
+    }
+  } catch (e) { /* fallthrough */ }
+  const embedded = document.getElementById('embedded-menu');
+  if (embedded) {
+    MENU = JSON.parse(embedded.textContent);
+    return { source: 'embedded' };
+  }
+  throw new Error('Không có menu nào để tải');
+}
+
+// ============== MENU LOOKUPS ==============
+function getItem(itemId) {
+  for (const c of MENU.categories) {
+    const it = c.items.find(i => i.id === itemId);
+    if (it) return { item: it, category: c };
+  }
+  return null;
+}
+function getTopping(toppingId)        { return MENU.toppings.find(t => t.id === toppingId); }
+function getOptionGroup(groupId)      { return MENU.optionGroups.find(g => g.id === groupId); }
+function getToppingGroup(groupId)     { return MENU.toppingGroups.find(g => g.id === groupId); }
+
+// Get the deduplicated, ordered list of toppings available for an item.
+// Multiple groups may include the same topping; we keep first occurrence and group label.
+function getItemToppingSections(item) {
+  if (!item.toppingGroupIds || item.toppingGroupIds.length === 0) return [];
+  const seen = new Set();
+  const sections = [];
+  for (const gid of item.toppingGroupIds) {
+    const grp = getToppingGroup(gid);
+    if (!grp) continue;
+    const items = [];
+    const toppingIdList = grp.all ? MENU.toppings.map(t => t.id) : grp.toppingIds;
+    for (const tid of toppingIdList) {
+      if (seen.has(tid)) continue;
+      seen.add(tid);
+      const top = getTopping(tid);
+      if (top) items.push(top);
+    }
+    if (items.length > 0) {
+      sections.push({ group: grp, toppings: items });
+    }
+  }
+  return sections;
+}
+
+// ============== CART STATUS DERIVATION ==============
+// Status is derived from flags. Single source of truth.
+function deriveStatus(cart) {
+  if (cart.cancelled) return 'cancelled';
+  if (cart.paid && cart.delivered) return 'completed';
+  if (cart.paid) return 'paid';
+  if (cart.delivered) return 'delivered';
+  return 'draft';
+}
+
+const STATUS_META = {
+  draft:        { label: 'Khởi tạo',      class: 'status-draft' },
+  paid:         { label: 'Đã thanh toán', class: 'status-paid' },
+  delivered:    { label: 'Đã giao',       class: 'status-delivered' },
+  completed:    { label: 'Hoàn thành',    class: 'status-completed' },
+  cancelled:    { label: 'Đã hủy',        class: 'status-cancelled' }
+};
+
+// Cart is editable only in draft state
+function isCartEditable(cart) {
+  return deriveStatus(cart) === 'draft';
+}
+
+// Should this cart be archived (auto-moved out of active list)?
+function shouldArchive(cart) {
+  const s = deriveStatus(cart);
+  return s === 'completed' || s === 'cancelled';
+}
+
+// ============== PRICE CALCULATION ==============
+function calcLinePrice(line) {
+  const found = getItem(line.itemId);
+  if (!found) return 0;
+  const item = found.item;
+  const sizeObj = item.sizes.find(s => s.size === line.size);
+  let basePrice = sizeObj ? sizeObj.price : 0;
+
+  // Apply option price deltas
+  if (line.options && item.optionGroupIds) {
+    for (const gid of item.optionGroupIds) {
+      const grp = getOptionGroup(gid);
+      if (!grp) continue;
+      const selected = line.options[grp.id];
+      const valObj = grp.values.find(v => v.value === selected);
+      if (!valObj || !valObj.priceDelta) continue;
+      const d = valObj.priceDelta;
+      if (typeof d === 'number') basePrice += d;
+      else if (typeof d === 'object' && d[line.size] != null) basePrice += d[line.size];
+    }
+  }
+
+  let toppingTotal = 0;
+  if (line.toppings) {
+    for (const t of line.toppings) {
+      const top = getTopping(t.id);
+      if (top) toppingTotal += top.price * (t.qty || 1);
+    }
+  }
+
+  return (basePrice + toppingTotal) * line.qty;
+}
+function calcCartSubtotal(cart) {
+  return cart.lines.reduce((sum, l) => sum + calcLinePrice(l), 0);
+}
+function calcCartDiscount(cart) {
+  const sub = calcCartSubtotal(cart);
+  if (!cart.discount || !cart.discount.value) return 0;
+  if (cart.discount.type === 'percent') {
+    return Math.min(sub, sub * cart.discount.value / 100);
+  }
+  return Math.min(sub, cart.discount.value);
+}
+function calcCartTotal(cart) {
+  return calcCartSubtotal(cart) - calcCartDiscount(cart);
+}
+
+// ============== CART OPERATIONS ==============
+function newCart() {
+  const cart = {
+    id: uid('cart'),
+    displayCode: genDisplayCode(),
+    customerName: '',
+    lines: [],
+    paid: false,
+    delivered: false,
+    cancelled: false,
+    pinned: false,
+    discount: { type: 'amount', value: 0 },
+    createdAt: Date.now(),
+    paidAt: null,
+    deliveredAt: null,
+    completedAt: null
+  };
+  state.carts.push(cart);
+  state.activeCartId = cart.id;
+  saveState();
+  return cart;
+}
+function getActiveCart() {
+  return state.carts.find(c => c.id === state.activeCartId);
+}
+function closeCart(cartId) {
+  const cart = state.carts.find(c => c.id === cartId);
+  if (!cart) return;
+  if (cart.pinned) {
+    toast('Giỏ đang ghim, bỏ ghim trước khi đóng');
+    return;
+  }
+  if (cart.lines.length > 0 && deriveStatus(cart) === 'draft') {
+    if (!confirm('Giỏ ' + cart.displayCode + ' còn món chưa thanh toán. Đóng giỏ này (dữ liệu sẽ mất)?')) return;
+  } else if (deriveStatus(cart) !== 'draft') {
+    if (!confirm('Đóng giỏ ' + cart.displayCode + '? Đơn này chưa hoàn thành sẽ vào tab "Đơn hàng" với trạng thái hiện tại.')) return;
+    // Move to archived as-is
+    state.archived.push(cart);
+  }
+  state.carts = state.carts.filter(c => c.id !== cartId);
+  state.mobileDetailExpanded.delete(cartId);
+  if (state.activeCartId === cartId) {
+    const remaining = state.carts;
+    state.activeCartId = remaining.length > 0 ? remaining[0].id : null;
+  }
+  saveState();
+  renderAll();
+}
+function togglePin(cartId) {
+  const cart = state.carts.find(c => c.id === cartId);
+  if (!cart) return;
+  cart.pinned = !cart.pinned;
+  saveState();
+  renderCart();
+}
+
+// ============== FLAG ACTIONS (the heart of the new logic) ==============
+function setPaid(cart, val) {
+  cart.paid = val;
+  cart.paidAt = val ? Date.now() : null;
+  afterFlagChange(cart);
+}
+function setDelivered(cart, val) {
+  cart.delivered = val;
+  cart.deliveredAt = val ? Date.now() : null;
+  afterFlagChange(cart);
+}
+function setCancelled(cart) {
+  cart.cancelled = true;
+  cart.completedAt = Date.now();
+  // Move to archived
+  state.archived.push(cart);
+  state.carts = state.carts.filter(c => c.id !== cart.id);
+  state.mobileDetailExpanded.delete(cart.id);
+  if (state.activeCartId === cart.id) {
+    state.activeCartId = state.carts.length > 0 ? state.carts[0].id : null;
+  }
+  saveState();
+}
+function afterFlagChange(cart) {
+  // If both flags now true → completed, archive automatically
+  if (cart.paid && cart.delivered && !cart.completedAt) {
+    cart.completedAt = Date.now();
+    state.archived.push(cart);
+    state.carts = state.carts.filter(c => c.id !== cart.id);
+    state.mobileDetailExpanded.delete(cart.id);
+    if (state.activeCartId === cart.id) {
+      state.activeCartId = state.carts.length > 0 ? state.carts[0].id : null;
+    }
+    toast('Đơn ' + cart.displayCode + ' đã hoàn thành ✓');
+  }
+  saveState();
+}
+
+// ============== ITEM CONFIG MODAL ==============
+let modalState = null;
+let pendingRemoveIdx = null; // index of line awaiting delete confirmation
+
+function openItemModal(itemId, editLineIdx, initialSize) {
+  const found = getItem(itemId);
+  if (!found) return;
+  const item = found.item;
+
+  let initial;
+  if (editLineIdx != null) {
+    const cart = getActiveCart();
+    initial = JSON.parse(JSON.stringify(cart.lines[editLineIdx]));
+    initial.editLineIdx = editLineIdx;
+  } else {
+    const opts = {};
+    if (item.optionGroupIds) {
+      for (const gid of item.optionGroupIds) {
+        const grp = getOptionGroup(gid);
+        if (grp) opts[grp.id] = grp.default;
+      }
+    }
+    const validSize = initialSize && item.sizes.find(s => s.size === initialSize)
+      ? initialSize : item.sizes[0].size;
+    initial = {
+      itemId: item.id,
+      size: validSize,
+      options: opts,
+      toppings: [],
+      qty: 1,
+      note: '',
+      editLineIdx: null
+    };
+  }
+  modalState = initial;
+  renderItemModal();
+  $('#item-modal').classList.add('show');
+}
+
+function renderItemModal() {
+  if (!modalState) return;
+  const found = getItem(modalState.itemId);
+  if (!found) return;
+  const item = found.item;
+  $('#modal-title').textContent = item.name;
+
+  let html = '';
+
+  // Size
+  if (item.sizes.length > 1) {
+    html += `<div class="opt-section"><h4>Size</h4><div class="opt-chips">`;
+    for (const s of item.sizes) {
+      const sel = s.size === modalState.size ? 'selected' : '';
+      html += `<button class="opt-chip ${sel}" data-act="size" data-val="${s.size}">${s.size} <span class="delta">${fmtPrice(s.price)}đ</span></button>`;
+    }
+    html += `</div></div>`;
+  }
+
+  // Options
+  if (item.optionGroupIds) {
+    for (const gid of item.optionGroupIds) {
+      const grp = getOptionGroup(gid);
+      if (!grp) continue;
+      html += `<div class="opt-section"><h4>${escHtml(grp.label)}</h4><div class="opt-chips">`;
+      for (const v of grp.values) {
+        const sel = modalState.options[grp.id] === v.value ? 'selected' : '';
+        let deltaTxt = '';
+        if (v.priceDelta) {
+          const d = typeof v.priceDelta === 'number' ? v.priceDelta : v.priceDelta[modalState.size];
+          if (d) deltaTxt = `<span class="delta">+${fmtPrice(d)}đ</span>`;
+        }
+        html += `<button class="opt-chip ${sel}" data-act="opt" data-key="${grp.id}" data-val="${v.value}">${escHtml(v.label)} ${deltaTxt}</button>`;
+      }
+      html += `</div></div>`;
+    }
+  }
+
+  // Topping sections (grouped)
+  const toppingSections = getItemToppingSections(item);
+  if (toppingSections.length > 0) {
+    html += `<div class="opt-section"><h4>Topping</h4>`;
+    for (const sec of toppingSections) {
+      // Show group heading only if more than 1 group
+      if (toppingSections.length > 1) {
+        html += `<div class="topping-group-section"><h5>${escHtml(sec.group.name)}</h5><div class="topping-list">`;
+      } else {
+        html += `<div class="topping-list">`;
+      }
+      for (const top of sec.toppings) {
+        const existing = modalState.toppings.find(t => t.id === top.id);
+        const sel = existing ? 'selected' : '';
+        const qtyTxt = existing && existing.qty > 1 ? ` x${existing.qty}` : '';
+        html += `<button class="topping-item ${sel}" data-act="topping" data-id="${top.id}">
+          <span class="name">${escHtml(top.name)}${qtyTxt}</span>
+          <span class="price">+${fmtPrice(top.price)}đ</span>
+        </button>`;
+      }
+      if (toppingSections.length > 1) html += `</div></div>`;
+      else html += `</div>`;
+    }
+    html += `<div class="topping-help">Click thêm: tăng SL · Chuột phải: bỏ chọn</div></div>`;
+  }
+
+  html += `<div class="opt-section"><h4>Ghi chú</h4>
+    <textarea class="note-input" id="line-note" placeholder="VD: ít ngọt, không lạnh quá...">${escHtml(modalState.note || '')}</textarea>
+  </div>`;
+
+  $('#modal-body').innerHTML = html;
+
+  // Update footer: qty controls (left) + price (center) + action buttons stay as-is
+  const linePrice = calcLinePrice(modalState);
+  $('#modal-foot-qty').innerHTML = `
+    <button data-act="qty" data-d="-1">−</button>
+    <span>${modalState.qty}</span>
+    <button data-act="qty" data-d="1">+</button>`;
+  $('#modal-foot-price').textContent = fmtPrice(linePrice) + 'đ';
+  $('#modal-add').textContent = modalState.editLineIdx != null ? 'Cập nhật' : 'Thêm vào giỏ';
+}
+
+function modalEvent(e) {
+  const target = e.target.closest('[data-act]');
+  if (!target) return;
+  const act = target.dataset.act;
+  if (act === 'size') {
+    modalState.size = target.dataset.val;
+  } else if (act === 'opt') {
+    modalState.options[target.dataset.key] = target.dataset.val;
+  } else if (act === 'topping') {
+    const id = target.dataset.id;
+    if (e.type === 'contextmenu') {
+      modalState.toppings = modalState.toppings.filter(t => t.id !== id);
+      e.preventDefault();
+    } else {
+      const ex = modalState.toppings.find(t => t.id === id);
+      if (ex) ex.qty = (ex.qty || 1) + 1;
+      else modalState.toppings.push({ id, qty: 1 });
+    }
+  } else if (act === 'qty') {
+    const d = parseInt(target.dataset.d);
+    modalState.qty = Math.max(1, modalState.qty + d);
+  }
+  renderItemModal();
+}
+
+function closeModal() {
+  $('#item-modal').classList.remove('show');
+  modalState = null;
+}
+function commitModal() {
+  if (!modalState) return;
+  modalState.note = $('#line-note') ? $('#line-note').value : '';
+  let cart = getActiveCart();
+  if (!cart) cart = newCart();
+  if (!isCartEditable(cart)) {
+    toast('Đơn đã chốt, không thể sửa');
+    return;
+  }
+  const line = {
+    itemId: modalState.itemId,
+    size: modalState.size,
+    options: modalState.options,
+    toppings: modalState.toppings,
+    qty: modalState.qty,
+    note: modalState.note
+  };
+  if (modalState.editLineIdx != null) {
+    cart.lines[modalState.editLineIdx] = line;
+    toast('Đã cập nhật');
+  } else {
+    cart.lines.push(line);
+    toast('Đã thêm vào giỏ');
+  }
+  saveState();
+  closeModal();
+  renderCart();
+}
+
+// ============== RENDER MENU ==============
+function renderMenu() {
+  const catNav = $('#cat-nav');
+  let navHtml = `<button class="${state.catFilter == null ? 'active' : ''}" data-cat="">Tất cả</button>`;
+  for (const c of MENU.categories) {
+    navHtml += `<button class="${state.catFilter === c.id ? 'active' : ''}" data-cat="${c.id}">${escHtml(c.name)}</button>`;
+  }
+  catNav.innerHTML = navHtml;
+
+  const search = state.search.toLowerCase().trim();
+  const searchNorm = removeAccents(search);
+
+  const content = $('#menu-content');
+  let html = '';
+  for (const cat of MENU.categories) {
+    if (state.catFilter && state.catFilter !== cat.id) continue;
+    const items = cat.items.filter(it => {
+      if (!search) return true;
+      return removeAccents(it.name + ' ' + cat.name).includes(searchNorm);
+    });
+    if (items.length === 0) continue;
+    html += `<div class="category"><h2>${escHtml(cat.name)}</h2><div class="items-grid">`;
+    for (const it of items) {
+      const priceTags = it.sizes.map(s => `<span class="price-tag" data-size="${s.size}">${s.size} ${fmtPrice(s.price)}đ</span>`).join('');
+      const badges = [];
+      if (it.isNew) badges.push('<span class="badge-new">NEW</span>');
+      if (it.hot) badges.push('<span class="badge-hot">HOT</span>');
+      html += `<button class="item-card" data-item="${it.id}">
+        ${badges.length ? `<div class="badges">${badges.join('')}</div>` : ''}
+        <div class="name">${escHtml(it.name)}</div>
+        <div class="price-row">${priceTags}</div>
+      </button>`;
+    }
+    html += `</div></div>`;
+  }
+  if (!html) html = '<div style="text-align:center;padding:40px;color:var(--muted)">Không có món nào.</div>';
+  content.innerHTML = html;
+}
+
+// ============== RENDER CART ==============
+function renderCartTabs() {
+  const tabs = $('#cart-tabs');
+  let html = '';
+  // Keep original insertion order (createdAt), pinned does not affect position
+  const sorted = [...state.carts].sort((a, b) => a.createdAt - b.createdAt);
+  for (const c of sorted) {
+    const isActive = c.id === state.activeCartId;
+    const label = c.customerName || c.displayCode;
+    const pinIcon = c.pinned ? '📌' : '📍';
+    html += `<button class="cart-tab ${isActive ? 'active' : ''}" data-cart="${c.id}">
+      <span class="pin ${c.pinned ? 'active' : ''}" data-pin="${c.id}" title="${c.pinned ? 'Bỏ ghim' : 'Ghim giỏ'}">${pinIcon}</span>
+      <span>${escHtml(label)}</span>
+      ${c.lines.length > 0 ? `<span style="font-size:10px;color:var(--muted)">(${c.lines.reduce((s, l) => s + l.qty, 0)})</span>` : ''}
+      <span class="close ${c.pinned ? 'disabled' : ''}" data-close="${c.id}" title="${c.pinned ? 'Bỏ ghim trước' : 'Đóng giỏ'}">×</span>
+    </button>`;
+  }
+  html += `<button class="cart-tab add-cart" id="add-cart-btn" title="Tạo giỏ mới">+</button>`;
+  tabs.innerHTML = html;
+
+  // After rendering, measure cart-tabs height (for mobile detail panel positioning)
+  // Run on next frame to let layout settle.
+  if (isMobile()) {
+    requestAnimationFrame(() => {
+      const h = tabs.offsetHeight;
+      document.documentElement.style.setProperty('--cart-tabs-h', h + 'px');
+    });
+  }
+}
+
+// Detect if viewport is mobile size
+function isMobile() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+// Build the cart detail HTML (header + lines + customer input). Pure function.
+function buildCartDetailHtml(cart) {
+  const status = deriveStatus(cart);
+  const meta = STATUS_META[status];
+  const editable = isCartEditable(cart);
+
+  let html = `<div class="cart-header">
+    <span class="cart-id">${escHtml(cart.displayCode)}</span>
+    <span class="cart-status ${meta.class}">${meta.label}</span>
+  </div>`;
+
+  if (status !== 'draft' && status !== 'cancelled') {
+    html += `<div class="flag-row">
+      <span class="flag-chip ${cart.paid ? 'on' : ''}">${cart.paid ? '✓' : '○'} Thanh toán</span>
+      <span class="flag-chip ${cart.delivered ? 'on' : ''}">${cart.delivered ? '✓' : '○'} Giao hàng</span>
+    </div>`;
+  }
+
+  html += `<div class="cart-customer" style="margin-top:10px">
+    <input type="text" id="customer-name" placeholder="Tên khách / số bàn (tùy chọn)" value="${escHtml(cart.customerName)}" ${!editable ? 'disabled' : ''}>
+  </div>`;
+
+  if (cart.lines.length === 0) {
+    html += `<div class="empty-cart">Giỏ trống.<br>Click món để thêm.</div>`;
+  } else {
+    for (let i = 0; i < cart.lines.length; i++) {
+      const line = cart.lines[i];
+      const found = getItem(line.itemId);
+      if (!found) continue;
+      const item = found.item;
+
+      // Size with base price
+      const sizeObj = item.sizes.find(s => s.size === line.size);
+      const sizeBasePrice = sizeObj ? sizeObj.price : 0;
+      const optParts = [`Size ${line.size} (${fmtPrice(sizeBasePrice)}đ)`];
+      if (item.optionGroupIds) {
+        for (const gid of item.optionGroupIds) {
+          const grp = getOptionGroup(gid);
+          if (!grp) continue;
+          const v = line.options[grp.id];
+          if (!v) continue;
+          const valObj = grp.values.find(vv => vv.value === v);
+          if (!valObj) continue;
+          let optLabel = valObj.label;
+          if (valObj.priceDelta) {
+            const d = typeof valObj.priceDelta === 'number' ? valObj.priceDelta : (valObj.priceDelta[line.size] || 0);
+            if (d) optLabel += ` (+${fmtPrice(d)}đ)`;
+          }
+          if (grp.required) optParts.push(`${grp.label}: ${optLabel}`);
+          else if (v !== grp.default) optParts.push(optLabel);
+        }
+      }
+
+      const tops = (line.toppings || []).map(t => {
+        const top = getTopping(t.id);
+        if (!top) return '';
+        const qty = t.qty || 1;
+        return top.name + (qty > 1 ? ` x${qty}` : '') + ` (+${fmtPrice(top.price * qty)}đ)`;
+      }).filter(Boolean);
+
+      const linePrice = calcLinePrice(line);
+      const isPending = pendingRemoveIdx === i;
+
+      html += `<div class="line">
+        ${editable ? (isPending
+          ? `<button class="line-remove-confirm" data-rm-confirm="${i}">✕</button>`
+          : `<button class="line-remove" data-rm-line="${i}">×</button>`) : ''}
+        <div class="line-name">${escHtml(item.name)}</div>
+        <div class="line-meta">${optParts.map(escHtml).join(' · ')}</div>
+        ${tops.length ? `<div class="line-toppings">+ ${tops.map(escHtml).join(' · ')}</div>` : ''}
+        ${line.note ? `<div class="line-toppings">📝 ${escHtml(line.note)}</div>` : ''}
+        <div class="line-bottom">
+          ${editable ? `<div class="qty-ctl">
+            <button data-line-qty="${i}" data-d="-1">−</button>
+            <span>${line.qty}</span>
+            <button data-line-qty="${i}" data-d="1">+</button>
+          </div>` : `<span style="font-size:12px;color:var(--muted)">SL: ${line.qty}</span>`}
+          <span class="line-price">${fmtPrice(linePrice / line.qty)}đ</span>
+          <span class="line-total">${fmtPrice(linePrice)}đ</span>
+        </div>
+        ${editable ? `<button class="line-edit" data-edit-line="${i}">Sửa tùy chọn</button>` : ''}
+      </div>`;
+    }
+  }
+  return html;
+}
+
+// Build the cart footer HTML (totals + actions). Pure function.
+function buildCartFooterHtml(cart) {
+  const status = deriveStatus(cart);
+  const editable = isCartEditable(cart);
+  const sub = calcCartSubtotal(cart);
+  const disc = calcCartDiscount(cart);
+  const total = sub - disc;
+  let html = '';
+
+  if (cart.lines.length > 0) {
+    html += `<div class="discount-row">
+      <label>Giảm giá:</label>
+      <input type="number" id="discount-value" min="0" value="${cart.discount.value || 0}" ${!editable ? 'disabled' : ''}>
+      <select id="discount-type" ${!editable ? 'disabled' : ''}>
+        <option value="amount" ${cart.discount.type === 'amount' ? 'selected' : ''}>Nghìn đ</option>
+        <option value="percent" ${cart.discount.type === 'percent' ? 'selected' : ''}>%</option>
+      </select>
+    </div>`;
+    html += `<div class="totals">
+      <div class="total-row"><span>Tạm tính</span><span>${fmtPrice(sub)}đ</span></div>`;
+    if (disc > 0) html += `<div class="total-row"><span>Giảm</span><span>-${fmtPrice(disc)}đ</span></div>`;
+    html += `<div class="total-row grand"><span>TỔNG</span><span class="val">${fmtPrice(total)}đ</span></div></div>`;
+  }
+
+  if (status !== 'cancelled' && status !== 'completed') {
+    if (cart.lines.length > 0) {
+      html += `<div class="action-row">
+        <button class="btn btn-secondary" data-act="print-bar">🧋 In phiếu pha chế</button>
+        <button class="btn btn-secondary" data-act="print-receipt">🧾 In hóa đơn</button>
+      </div>`;
+    }
+    html += `<div class="action-row">
+      <button class="btn btn-flag ${cart.paid ? 'on' : ''}" data-act="toggle-paid" ${cart.lines.length === 0 ? 'disabled' : ''}>
+        ${cart.paid ? '✓ Đã thanh toán' : 'Đã thanh toán?'}
+      </button>
+      <button class="btn btn-flag ${cart.delivered ? 'on' : ''}" data-act="toggle-delivered" ${cart.lines.length === 0 ? 'disabled' : ''}>
+        ${cart.delivered ? '✓ Đã giao' : 'Đã giao?'}
+      </button>
+    </div>`;
+    html += `<div class="action-row full">
+      <button class="btn btn-danger-outline" data-act="cancel">Hủy đơn</button>
+    </div>`;
+  }
+  return html;
+}
+
+// Build summary chips for mobile (line items in compact form)
+function buildMobileSummaryChips(cart) {
+  if (!cart || cart.lines.length === 0) return '';
+  const chips = cart.lines.map(line => {
+    const found = getItem(line.itemId);
+    if (!found) return '';
+    return `<span class="summary-chip">${escHtml(found.item.name)} - ${escHtml(line.size)} <span class="qty">×${line.qty}</span></span>`;
+  }).filter(Boolean).join('');
+  if (!chips) return '';
+  return `<span class="summary-label">Tóm tắt</span>${chips}`;
+}
+
+function renderCart() {
+  renderCartTabs();
+  const cart = getActiveCart();
+  const body = $('#cart-body');
+  const footer = $('#cart-footer');
+  const mobileMode = isMobile();
+
+  if (!cart) {
+    const emptyMsg = `<div class="empty-cart">
+      Chưa có giỏ hàng nào.<br>Bấm <strong>+</strong> phía trên để tạo giỏ mới,<br>hoặc click 1 món bất kỳ.
+    </div>`;
+    body.innerHTML = emptyMsg;
+    footer.innerHTML = '';
+    if (mobileMode) {
+      $('#mobile-detail-content').innerHTML = emptyMsg;
+      $('#mobile-detail-footer').innerHTML = '';
+      renderMobileSummary(null);
+      // Always-on if no draft cart possible? Actually if no cart, nothing to show.
+      // Just keep panel collapsed.
+      collapseMobileDetail();
+    }
+    return;
+  }
+
+  const status = deriveStatus(cart);
+  const detailHtml = buildCartDetailHtml(cart);
+  const footerHtml = buildCartFooterHtml(cart);
+
+  if (mobileMode) {
+    // === MOBILE LAYOUT ===
+    // body shows the menu (so user can browse + add items) when status is draft.
+    // detail panel is the slide-up overlay.
+    if (status === 'draft') {
+      // Render menu (toolbar + items) directly into cart-body
+      body.innerHTML = buildMobileMenuHtml();
+      footer.innerHTML = ''; // desktop footer not used on mobile
+
+      // Render detail content into the slide-up panel
+      $('#mobile-detail-content').innerHTML = detailHtml;
+      $('#mobile-detail-footer').innerHTML = footerHtml;
+
+      // Summary + pay button at bottom
+      renderMobileSummary(cart);
+
+      // Panel mode: not always-on (user can collapse)
+      const panel = $('#mobile-detail-panel');
+      panel.classList.remove('always-on');
+      // Apply expanded state instantly (no slide) — animation only on explicit user tap
+      panel.classList.add('no-transition');
+      if (state.mobileDetailExpanded.has(cart.id)) {
+        panel.classList.add('expanded');
+        $('#mobile-summary').classList.add('hidden');
+      } else {
+        panel.classList.remove('expanded');
+        $('#mobile-summary').classList.remove('hidden');
+      }
+      requestAnimationFrame(() => panel.classList.remove('no-transition'));
+    } else {
+      // Non-draft: panel is always on, no menu visible, no summary
+      body.innerHTML = '';
+      footer.innerHTML = '';
+      $('#mobile-detail-content').innerHTML = detailHtml;
+      $('#mobile-detail-footer').innerHTML = footerHtml;
+      $('#mobile-detail-panel').classList.add('always-on');
+      $('#mobile-detail-panel').classList.add('expanded');
+      $('#mobile-summary').classList.add('hidden');
+    }
+  } else {
+    // === DESKTOP LAYOUT ===
+    body.innerHTML = detailHtml;
+    footer.innerHTML = footerHtml;
+    // Make sure mobile detail panel is collapsed
+    $('#mobile-detail-panel').classList.remove('expanded', 'always-on');
+    $('#mobile-summary').classList.remove('hidden');
+  }
+}
+
+// Build mobile menu HTML: sticky toolbar (search + categories) + items grid
+function buildMobileMenuHtml() {
+  const search = state.search.toLowerCase().trim();
+  const searchNorm = removeAccents(search);
+
+  // Toolbar HTML
+  let toolbarHtml = `<div class="mobile-menu-toolbar">
+    <input type="text" class="search-input" id="mobile-search-input" placeholder="🔍 Tìm món..." value="${escHtml(state.search)}">
+    <div class="cat-nav-mobile" id="mobile-cat-nav">
+      <button class="${state.catFilter == null ? 'active' : ''}" data-cat="">Tất cả</button>`;
+  for (const c of MENU.categories) {
+    toolbarHtml += `<button class="${state.catFilter === c.id ? 'active' : ''}" data-cat="${c.id}">${escHtml(c.name)}</button>`;
+  }
+  toolbarHtml += `</div></div>`;
+
+  // Content HTML
+  let contentHtml = '<div class="mobile-menu-content">';
+  let hasItems = false;
+  for (const cat of MENU.categories) {
+    if (state.catFilter && state.catFilter !== cat.id) continue;
+    const items = cat.items.filter(it => {
+      if (!search) return true;
+      return removeAccents(it.name + ' ' + cat.name).includes(searchNorm);
+    });
+    if (items.length === 0) continue;
+    hasItems = true;
+    contentHtml += `<div class="category"><h2>${escHtml(cat.name)}</h2><div class="items-grid">`;
+    for (const it of items) {
+      const priceTags = it.sizes.map(s => `<span class="price-tag" data-size="${s.size}">${s.size} ${fmtPrice(s.price)}đ</span>`).join('');
+      const badges = [];
+      if (it.isNew) badges.push('<span class="badge-new">NEW</span>');
+      if (it.hot) badges.push('<span class="badge-hot">HOT</span>');
+      contentHtml += `<button class="item-card" data-item="${it.id}">
+        ${badges.length ? `<div class="badges">${badges.join('')}</div>` : ''}
+        <div class="name">${escHtml(it.name)}</div>
+        <div class="price-row">${priceTags}</div>
+      </button>`;
+    }
+    contentHtml += `</div></div>`;
+  }
+  if (!hasItems) contentHtml += '<div style="text-align:center;padding:40px;color:var(--muted)">Không có món nào.</div>';
+  contentHtml += '</div>';
+
+  return toolbarHtml + contentHtml;
+}
+
+function renderMobileSummary(cart) {
+  const summaryEl = $('#mobile-summary');
+  const linesEl = $('#mobile-summary-lines');
+  const payBtn = $('#mobile-pay-btn');
+  const labelEl = $('#mobile-pay-label');
+  const totalEl = $('#mobile-pay-total');
+
+  if (!cart) {
+    linesEl.innerHTML = '';
+    labelEl.textContent = 'Thanh toán · 0 ly';
+    totalEl.textContent = '0đ';
+    payBtn.disabled = true;
+    return;
+  }
+
+  // Chips (empty when no lines → CSS hides via :empty)
+  linesEl.innerHTML = buildMobileSummaryChips(cart);
+
+  const totalQty = cart.lines.reduce((s, l) => s + l.qty, 0);
+  const total = calcCartTotal(cart);
+  labelEl.textContent = `Thanh toán · ${totalQty} ly`;
+  totalEl.textContent = fmtPrice(total) + 'đ';
+  payBtn.disabled = cart.lines.length === 0;
+}
+
+function expandMobileDetail() {
+  if (state.activeCartId) state.mobileDetailExpanded.add(state.activeCartId);
+  $('#mobile-detail-panel').classList.add('expanded');
+  $('#mobile-summary').classList.add('hidden');
+}
+function collapseMobileDetail() {
+  if (state.activeCartId) state.mobileDetailExpanded.delete(state.activeCartId);
+  $('#mobile-detail-panel').classList.remove('expanded');
+  $('#mobile-summary').classList.remove('hidden');
+}
+
+// ============== RENDER ORDERS VIEW ==============
+function renderOrders() {
+  // Combine archived + active carts that are not draft (so user sees in-progress ones too)
+  const allOrders = [
+    ...state.carts.filter(c => deriveStatus(c) !== 'draft'),
+    ...state.archived
+  ].sort((a, b) => (b.completedAt || b.paidAt || b.deliveredAt || b.createdAt) -
+                    (a.completedAt || a.paidAt || a.deliveredAt || a.createdAt));
+
+  $('#orders-badge').textContent = allOrders.length;
+
+  let filtered = allOrders;
+  if (state.orderFilter !== 'all') {
+    filtered = allOrders.filter(c => deriveStatus(c) === state.orderFilter);
+  }
+
+  const list = $('#order-list');
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1">Chưa có đơn nào.</div>';
+    return;
+  }
+
+  let html = '';
+  for (const c of filtered) {
+    const status = deriveStatus(c);
+    const meta = STATUS_META[status];
+    const total = calcCartTotal(c);
+    const dt = new Date(c.completedAt || c.paidAt || c.deliveredAt || c.createdAt);
+    const dtStr = dt.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const summary = c.lines.map(l => {
+      const found = getItem(l.itemId);
+      return found ? `${found.item.name} (${l.size}) ×${l.qty}` : '';
+    }).filter(Boolean).join(' · ');
+    html += `<div class="order-card" data-order-id="${c.id}">
+      <div class="head">
+        <span class="oid">${escHtml(c.displayCode)}</span>
+        <span class="cart-status ${meta.class}">${meta.label}</span>
+      </div>
+      <div class="meta">${dtStr}${c.customerName ? ' · ' + escHtml(c.customerName) : ''}</div>
+      <div class="lines-summary">${escHtml(summary || '(trống)')}</div>
+      <div class="total">${fmtPrice(total)}đ</div>
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+
+// ============== SETTINGS RENDER ==============
+function renderSettings() {
+  const tabs = [
+    {id:'shop', label:'Cửa hàng'},
+    {id:'toppings', label:'Topping'},
+    {id:'toppingGroups', label:'Nhóm topping'},
+    {id:'optionGroups', label:'Tùy chọn'},
+    {id:'categories', label:'Danh mục'},
+    {id:'printers', label:'🖨 Máy In'}
+  ];
+  const tabNav = tabs.map(t =>
+    `<button class="settings-tab-btn${settingsState.tab===t.id?' active':''}" data-stab="${t.id}">${t.label}</button>`
+  ).join('');
+
+  let content = '';
+  if (settingsState.tab === 'shop') content = renderSettingsShop();
+  else if (settingsState.tab === 'toppings') content = renderSettingsToppings();
+  else if (settingsState.tab === 'toppingGroups') content = renderSettingsToppingGroups();
+  else if (settingsState.tab === 'optionGroups') content = renderSettingsOptionGroups();
+  else if (settingsState.tab === 'categories') content = renderSettingsCategories();
+  else if (settingsState.tab === 'printers')  content = renderSettingsPrinters();
+
+  $('#settings-view').innerHTML = `
+    <div class="settings-header">
+      <h1>Cài đặt Menu</h1>
+      <button class="btn settings-export-btn" data-sact="export">Xuất JSON</button>
+    </div>
+    <div class="settings-tab-nav">${tabNav}</div>
+    <div class="settings-content">${content}</div>`;
+
+  // Wire radio toggle for topping group type
+  $$('input[name="sf-tgroup-type"]').forEach(r => r.addEventListener('change', () => {
+    const sec = $('#sf-tgroup-custom-section');
+    if (sec) sec.style.display = r.value === 'all' ? 'none' : '';
+  }));
+
+  // Auto-slug ID from name for add forms
+  const nameEl = $('#sf-topping-name') || $('#sf-tgroup-name') || $('#sf-optgroup-label') || $('#sf-cat-name') || $('#sf-item-name');
+  const idEl = nameEl && (nameEl.id === 'sf-optgroup-label' ? $('#sf-optgroup-id') :
+    nameEl.id === 'sf-topping-name' ? $('#sf-topping-id') :
+    nameEl.id === 'sf-tgroup-name' ? $('#sf-tgroup-id') :
+    nameEl.id === 'sf-cat-name' ? $('#sf-cat-id') :
+    nameEl.id === 'sf-item-name' ? $('#sf-item-id') : null);
+  if (nameEl && idEl && !idEl.readOnly) {
+    nameEl.addEventListener('input', () => {
+      if (!idEl.value) idEl.value = slugify(nameEl.value);
+    });
+  }
+}
+
+function renderSettingsShop() {
+  const s = MENU.shop;
+  return `<div class="shop-info-form">
+    <div class="form-field"><label>Tên quán</label><input type="text" id="sf-shop-name" value="${escHtml(s.name||'')}"></div>
+    <div class="form-field"><label>Slogan</label><input type="text" id="sf-shop-tagline" value="${escHtml(s.tagline||'')}"></div>
+    <div class="form-field"><label>Số điện thoại</label><input type="text" id="sf-shop-phone" value="${escHtml(s.phone||'')}"></div>
+    <div class="form-field"><label>Giờ mở cửa</label><input type="text" id="sf-shop-hours" value="${escHtml(s.hours||'')}"></div>
+    <div class="form-field"><label>Mật khẩu WiFi</label><input type="text" id="sf-shop-wifi" value="${escHtml(s.wifi||'')}"></div>
+    <div class="form-field-sm"><label>Đơn vị giá (đồng)</label><input type="number" id="sf-shop-priceunit" value="${s.priceUnit||1000}"></div>
+  </div>
+  <div class="shop-save-bar"><button class="btn btn-primary" data-sact="save-shop">Lưu thông tin cửa hàng</button></div>`;
+}
+
+function renderSettingsToppings() {
+  let html = `<div class="settings-section-header">
+    <h2>Topping (${MENU.toppings.length})</h2>
+    <button class="btn btn-primary btn-sm" data-sact="add-topping">+ Thêm</button>
+  </div>`;
+  if (settingsState.addingIn?.section === 'toppings') html += renderToppingForm(null);
+  html += '<div class="settings-list">';
+  for (const t of MENU.toppings) {
+    if (settingsState.editing?.section === 'toppings' && settingsState.editing?.id === t.id) {
+      html += renderToppingForm(t);
+    } else {
+      html += `<div class="settings-row" data-drag-section="toppings" data-drag-id="${t.id}">
+        <span class="drag-handle" draggable="true" data-drag-section="toppings" data-drag-id="${t.id}" title="Kéo để sắp xếp">⠿</span>
+        <div class="row-main"><div class="row-name">${escHtml(t.name)}</div><div class="row-meta">${escHtml(t.id)}</div></div>
+        <span class="row-price">${fmtPrice(t.price)}đ</span>
+        <div class="row-btns">
+          <button class="btn btn-ghost btn-sm" data-sact="edit-topping" data-id="${t.id}">Sửa</button>
+          <button class="btn btn-danger-ghost btn-sm" data-sact="del-topping" data-id="${t.id}">Xóa</button>
+        </div></div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderToppingForm(topping) {
+  const isNew = !topping;
+  return `<div class="settings-form">
+    <div class="form-row">
+      <div class="form-field"><label>Tên topping</label><input type="text" id="sf-topping-name" value="${escHtml(topping?.name||'')}" placeholder="VD: Thạch dừa"></div>
+      <div class="form-field-sm"><label>Giá (nghìn đồng)</label><input type="number" id="sf-topping-price" value="${topping?.price??''}" placeholder="5"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>ID (duy nhất, không dấu)</label><input type="text" id="sf-topping-id" value="${escHtml(topping?.id||'')}" placeholder="thach_dua"${!isNew?' readonly style="opacity:0.6"':''}></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" data-sact="cancel-topping-form">Hủy</button>
+      <button class="btn btn-primary btn-sm" data-sact="${isNew?'save-new-topping':'save-edit-topping'}" data-id="${topping?.id||''}">Lưu</button>
+    </div></div>`;
+}
+
+function renderSettingsToppingGroups() {
+  let html = `<div class="settings-note">Nhóm có <strong>"Tất cả topping"</strong> sẽ tự động gồm mọi topping mới thêm vào.</div>
+  <div class="settings-section-header">
+    <h2>Nhóm topping (${MENU.toppingGroups.length})</h2>
+    <button class="btn btn-primary btn-sm" data-sact="add-tgroup">+ Thêm</button>
+  </div>`;
+  if (settingsState.addingIn?.section === 'toppingGroups') html += renderToppingGroupForm(null);
+  html += '<div class="settings-list">';
+  for (const g of MENU.toppingGroups) {
+    if (settingsState.editing?.section === 'toppingGroups' && settingsState.editing?.id === g.id) {
+      html += renderToppingGroupForm(g);
+    } else {
+      const typeLabel = g.all ? 'Tất cả topping (tự động)' : `${(g.toppingIds||[]).length} topping chọn lọc`;
+      html += `<div class="settings-row" data-drag-section="toppingGroups" data-drag-id="${g.id}">
+        <span class="drag-handle" draggable="true" data-drag-section="toppingGroups" data-drag-id="${g.id}" title="Kéo để sắp xếp">⠿</span>
+        <div class="row-main"><div class="row-name">${escHtml(g.name)}</div><div class="row-meta">${escHtml(g.id)} · ${typeLabel}</div></div>
+        <div class="row-btns">
+          <button class="btn btn-ghost btn-sm" data-sact="edit-tgroup" data-id="${g.id}">Sửa</button>
+          <button class="btn btn-danger-ghost btn-sm" data-sact="del-tgroup" data-id="${g.id}">Xóa</button>
+        </div></div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderToppingGroupForm(group) {
+  const isNew = !group;
+  const isAll = group?.all === true;
+  const selectedIds = group?.toppingIds || [];
+  const toppingChecks = MENU.toppings.map(t =>
+    `<label><input type="checkbox" class="sf-tgroup-tid" value="${t.id}"${!isAll&&selectedIds.includes(t.id)?' checked':''}> ${escHtml(t.name)}</label>`
+  ).join('');
+  return `<div class="settings-form">
+    <div class="form-row">
+      <div class="form-field"><label>Tên nhóm</label><input type="text" id="sf-tgroup-name" value="${escHtml(group?.name||'')}" placeholder="VD: Tất cả topping"></div>
+      <div class="form-field"><label>ID</label><input type="text" id="sf-tgroup-id" value="${escHtml(group?.id||'')}" placeholder="default-topping-group"${!isNew?' readonly style="opacity:0.6"':''}></div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Loại nhóm</label>
+        <div class="sf-radio-row" style="margin-top:4px">
+          <label><input type="radio" name="sf-tgroup-type" value="all"${isAll?' checked':''}> Tất cả topping (tự động)</label>
+          <label><input type="radio" name="sf-tgroup-type" value="custom"${!isAll?' checked':''}> Chọn topping cụ thể</label>
+        </div>
+      </div>
+    </div>
+    <div id="sf-tgroup-custom-section"${isAll?' style="display:none"':''}>
+      <label>Chọn topping</label>
+      <div class="settings-check-list">${toppingChecks}</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" data-sact="cancel-tgroup-form">Hủy</button>
+      <button class="btn btn-primary btn-sm" data-sact="${isNew?'save-new-tgroup':'save-edit-tgroup'}" data-id="${group?.id||''}">Lưu</button>
+    </div></div>`;
+}
+
+function renderSettingsOptionGroups() {
+  let html = `<div class="settings-section-header">
+    <h2>Nhóm tùy chọn (${MENU.optionGroups.length})</h2>
+    <button class="btn btn-primary btn-sm" data-sact="add-optgroup">+ Thêm</button>
+  </div>`;
+  if (settingsState.addingIn?.section === 'optionGroups') html += renderOptionGroupForm(null);
+  html += '<div class="settings-list">';
+  for (const g of MENU.optionGroups) {
+    if (settingsState.editing?.section === 'optionGroups' && settingsState.editing?.id === g.id) {
+      html += renderOptionGroupForm(g);
+    } else {
+      html += `<div class="settings-row" data-drag-section="optionGroups" data-drag-id="${g.id}">
+        <span class="drag-handle" draggable="true" data-drag-section="optionGroups" data-drag-id="${g.id}" title="Kéo để sắp xếp">⠿</span>
+        <div class="row-main"><div class="row-name">${escHtml(g.label)}</div><div class="row-meta">${escHtml(g.id)} · ${g.required?'Bắt buộc':'Không bắt buộc'} · ${g.values.length} lựa chọn</div></div>
+        <div class="row-btns">
+          <button class="btn btn-ghost btn-sm" data-sact="edit-optgroup" data-id="${g.id}">Sửa</button>
+          <button class="btn btn-danger-ghost btn-sm" data-sact="del-optgroup" data-id="${g.id}">Xóa</button>
+        </div></div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderOptionGroupForm(group) {
+  const isNew = !group;
+  const values = group?.values || [];
+  const valRows = values.map((v, i) => `
+    <div class="size-row sf-optval-row" data-vi="${i}">
+      <input type="text" class="sf-optval-value" value="${escHtml(v.value)}" placeholder="value" style="max-width:80px">
+      <input type="text" class="sf-optval-label" value="${escHtml(v.label)}" placeholder="Nhãn">
+      <input type="text" class="sf-optval-delta" value="${escHtml(v.priceDelta!=null?(typeof v.priceDelta==='object'?JSON.stringify(v.priceDelta):String(v.priceDelta)):'')}" placeholder="Phụ phí (0 hay {&quot;L&quot;:5})" style="max-width:150px">
+      <button class="btn btn-danger-ghost btn-sm" data-sact="del-optval" data-vi="${i}" style="padding:4px 8px;flex-shrink:0">×</button>
+    </div>`).join('');
+  return `<div class="settings-form" id="sf-optgroup-form">
+    <div class="form-row">
+      <div class="form-field"><label>Tên hiển thị</label><input type="text" id="sf-optgroup-label" value="${escHtml(group?.label||'')}" placeholder="VD: Đường"></div>
+      <div class="form-field"><label>ID</label><input type="text" id="sf-optgroup-id" value="${escHtml(group?.id||'')}" placeholder="opt_sugar"${!isNew?' readonly style="opacity:0.6"':''}></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field-sm"><label>Bắt buộc chọn</label><select id="sf-optgroup-required"><option value="true"${group?.required!==false?' selected':''}>Có</option><option value="false"${group?.required===false?' selected':''}>Không</option></select></div>
+      <div class="form-field"><label>Giá trị mặc định</label><input type="text" id="sf-optgroup-default" value="${escHtml(group?.default||'')}" placeholder="100"></div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <label style="margin:0">Các lựa chọn</label>
+        <button class="btn btn-ghost btn-sm" data-sact="add-optval">+ Thêm</button>
+      </div>
+      <div class="sizes-list" id="sf-optval-list">${valRows}</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" data-sact="cancel-optgroup-form">Hủy</button>
+      <button class="btn btn-primary btn-sm" data-sact="${isNew?'save-new-optgroup':'save-edit-optgroup'}" data-id="${group?.id||''}">Lưu</button>
+    </div></div>`;
+}
+
+function renderSettingsCategories() {
+  let html = `<div class="settings-section-header">
+    <h2>Danh mục (${MENU.categories.length})</h2>
+    <button class="btn btn-primary btn-sm" data-sact="add-cat">+ Thêm danh mục</button>
+  </div>`;
+  if (settingsState.addingIn?.section === 'categories') html += renderCatNameForm(null);
+  for (const cat of MENU.categories) {
+    const isOpen = settingsState.expandedCat === cat.id;
+    const isEditingName = settingsState.editing?.section === 'cat-name' && settingsState.editing?.id === cat.id;
+    html += `<div class="settings-cat-block${isOpen?' open':''}" data-cat="${cat.id}" data-drag-section="categories" data-drag-id="${cat.id}">
+      <div class="settings-cat-header" data-sact="toggle-cat" data-id="${cat.id}">
+        <span class="drag-handle" draggable="true" data-drag-section="categories" data-drag-id="${cat.id}" title="Kéo để sắp xếp danh mục">⠿</span>
+        <span class="settings-cat-chevron">▶</span>
+        ${isEditingName
+          ? `<input type="text" id="sf-cat-name" value="${escHtml(cat.name)}" style="flex:1;padding:4px 8px;font-size:14px;font-weight:700;border:1.5px solid var(--accent);border-radius:4px" onclick="event.stopPropagation()">`
+          : `<span class="cat-name">${escHtml(cat.name)}</span><span style="font-size:11px;color:var(--muted);margin-left:4px">(${cat.items.length} món)</span>`
+        }
+        <div class="row-btns" onclick="event.stopPropagation()">
+          ${isEditingName
+            ? `<button class="btn btn-primary btn-sm" data-sact="save-edit-cat" data-id="${cat.id}">Lưu</button>
+               <button class="btn btn-ghost btn-sm" data-sact="cancel-cat-form">Hủy</button>`
+            : `<button class="btn btn-ghost btn-sm" data-sact="edit-cat-name" data-id="${cat.id}">Sửa tên</button>
+               <button class="btn btn-danger-ghost btn-sm" data-sact="del-cat" data-id="${cat.id}">Xóa</button>`
+          }
+        </div>
+      </div>
+      ${isOpen ? renderCatBody(cat) : ''}
+    </div>`;
+  }
+  return html;
+}
+
+function renderCatNameForm(cat) {
+  return `<div class="settings-form" style="margin-bottom:8px">
+    <div class="form-row">
+      <div class="form-field"><label>Tên danh mục</label><input type="text" id="sf-cat-name" value="${cat?escHtml(cat.name):''}" placeholder="VD: Trà Sữa"></div>
+      <div class="form-field"><label>ID</label><input type="text" id="sf-cat-id" value="${cat?escHtml(cat.id):''}" placeholder="tra_sua"${cat?' readonly style="opacity:0.6"':''}></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" data-sact="cancel-cat-form">Hủy</button>
+      <button class="btn btn-primary btn-sm" data-sact="${cat?'save-edit-cat':'save-new-cat'}" data-id="${cat?.id||''}">Lưu</button>
+    </div></div>`;
+}
+
+function renderCatBody(cat) {
+  let html = '<div class="settings-cat-body">';
+  if (settingsState.addingIn?.section === 'items' && settingsState.addingIn?.catId === cat.id) {
+    html += renderItemForm(null, cat.id);
+  } else {
+    html += `<div style="text-align:right;padding:8px 0 4px">
+      <button class="btn btn-primary btn-sm" data-sact="add-item" data-catid="${cat.id}">+ Thêm món</button>
+    </div>`;
+  }
+  html += '<div class="settings-list">';
+  for (const item of cat.items) {
+    if (settingsState.editing?.section === 'item' && settingsState.editing?.id === item.id) {
+      html += renderItemForm(item, cat.id);
+    } else {
+      const sizeTxt = item.sizes.map(s => `${s.size}:${fmtPrice(s.price)}đ`).join(' / ');
+      const flags = [item.hot?'🔥':'', item.isNew?'<span style="color:var(--new);font-size:10px;font-weight:700">NEW</span>':''].filter(Boolean).join(' ');
+      html += `<div class="settings-row" data-drag-section="items" data-drag-id="${item.id}" data-drag-catid="${cat.id}">
+        <span class="drag-handle" draggable="true" data-drag-section="items" data-drag-id="${item.id}" data-drag-catid="${cat.id}" title="Kéo để sắp xếp hoặc chuyển danh mục">⠿</span>
+        <div class="row-main">
+          <div class="row-name">${flags} ${escHtml(item.name)}</div>
+          <div class="row-meta">${escHtml(item.id)} · ${sizeTxt}</div>
+        </div>
+        <div class="row-btns">
+          <button class="btn btn-ghost btn-sm" data-sact="edit-item" data-id="${item.id}" data-catid="${cat.id}">Sửa</button>
+          <button class="btn btn-danger-ghost btn-sm" data-sact="del-item" data-id="${item.id}" data-catid="${cat.id}">Xóa</button>
+        </div></div>`;
+    }
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function renderItemForm(item, catId) {
+  const isNew = !item;
+  const sizes = item?.sizes || [{size:'L', price:''}];
+  const itemOptIds = item?.optionGroupIds || [];
+  const itemTgrpIds = item?.toppingGroupIds || [];
+  const sizeRows = sizes.map((s,i) => `
+    <div class="size-row sf-size-row" data-si="${i}">
+      <input type="text" class="sf-size-size" value="${escHtml(s.size)}" placeholder="L" style="max-width:60px">
+      <input type="number" class="sf-size-price" value="${s.price}" placeholder="Giá">
+      <button class="btn btn-danger-ghost btn-sm" data-sact="del-size" data-si="${i}" style="padding:4px 8px;flex-shrink:0">×</button>
+    </div>`).join('');
+  const optChecks = MENU.optionGroups.map(g =>
+    `<label><input type="checkbox" class="sf-item-optg" value="${g.id}"${itemOptIds.includes(g.id)?' checked':''}> ${escHtml(g.label)}</label>`
+  ).join('');
+  const tgrpChecks = MENU.toppingGroups.map(g =>
+    `<label><input type="checkbox" class="sf-item-tgrp" value="${g.id}"${itemTgrpIds.includes(g.id)?' checked':''}> ${escHtml(g.name)}</label>`
+  ).join('');
+  return `<div class="settings-form" data-catid="${catId}">
+    <div class="form-row">
+      <div class="form-field"><label>Tên món</label><input type="text" id="sf-item-name" value="${escHtml(item?.name||'')}" placeholder="VD: Trà Sữa Truyền Thống"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>ID món</label><input type="text" id="sf-item-id" value="${escHtml(item?.id||'')}" placeholder="ts_truyen_thong"${!isNew?' readonly style="opacity:0.6"':''}></div>
+      <div class="form-field"><label>Ghi chú</label><input type="text" id="sf-item-note" value="${escHtml(item?.note||'')}" placeholder="Tùy chọn..."></div>
+    </div>
+    <div class="form-row" style="gap:20px">
+      <label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" id="sf-item-hot"${item?.hot?' checked':''}> 🔥 Nổi bật</label>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" id="sf-item-isnew"${item?.isNew?' checked':''}> ✨ New</label>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <label style="margin:0">Size & Giá (nghìn đồng)</label>
+        <button class="btn btn-ghost btn-sm" data-sact="add-size">+ Size</button>
+      </div>
+      <div class="sizes-list" id="sf-item-sizes">${sizeRows}</div>
+    </div>
+    <div class="form-row" style="gap:16px;margin-top:10px">
+      <div class="form-field"><label>Nhóm tùy chọn</label><div class="settings-check-list">${optChecks}</div></div>
+      <div class="form-field"><label>Nhóm topping</label><div class="settings-check-list">${tgrpChecks}</div></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" data-sact="cancel-item-form" data-catid="${catId}">Hủy</button>
+      <button class="btn btn-primary btn-sm" data-sact="${isNew?'save-new-item':'save-edit-item'}" data-id="${item?.id||''}" data-catid="${catId}">Lưu</button>
+    </div></div>`;
+}
+
+function renderSettingsPrinters() {
+  const ps = getPrintSettings();
+  function modeRadios(key, current) {
+    return `<label class="ps-radio"><input type="radio" name="ps-${key}-mode" value="dialog"${current==='dialog'?' checked':''}> Hộp thoại in mặc định</label>
+            <label class="ps-radio"><input type="radio" name="ps-${key}-mode" value="server"${current==='server'?' checked':''}> In qua server</label>`;
+  }
+  function printerSelect(id, savedVal) {
+    return `<select id="${id}" class="ps-printer-select" data-saved="${escHtml(savedVal||'')}">
+      <option value="${escHtml(savedVal||'')}">${savedVal ? escHtml(savedVal) : '— Nhấn Kết nối để tải —'}</option>
+    </select>`;
+  }
+  return `
+  <div class="settings-section-header"><h2>Cấu hình máy in</h2></div>
+
+  <div class="settings-form" style="margin-bottom:12px">
+    <div class="form-row" style="align-items:flex-end">
+      <div class="form-field">
+        <label>URL Print Server</label>
+        <input type="text" id="ps-server-url" value="${escHtml(ps.serverUrl||'http://localhost:3000')}" placeholder="http://localhost:3000">
+      </div>
+      <button class="btn btn-primary btn-sm" data-sact="ps-connect" style="flex-shrink:0;height:36px">Kết nối</button>
+    </div>
+    <div id="ps-connect-status" style="font-size:12px;margin-top:6px;color:var(--muted)">Chưa kết nối</div>
+  </div>
+
+  <div class="settings-form" style="margin-bottom:12px">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Hóa đơn</div>
+    <div class="sf-radio-row" style="margin-bottom:10px">${modeRadios('receipt', ps.receipt.mode)}</div>
+    <div class="form-field"><label>Máy in</label>${printerSelect('ps-receipt-printer', ps.receipt.printer)}</div>
+  </div>
+
+  <div class="settings-form" style="margin-bottom:12px">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Phiếu pha chế</div>
+    <div class="sf-radio-row" style="margin-bottom:10px">${modeRadios('barTicket', ps.barTicket.mode)}</div>
+    <div class="form-field"><label>Máy in</label>${printerSelect('ps-bar-printer', ps.barTicket.printer)}</div>
+  </div>
+
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn btn-primary" data-sact="ps-save">Lưu cài đặt</button>
+  </div>`;
+}
+
+function handleSettingsEvent(e) {
+  if (e.target.classList.contains('drag-handle')) return;
+  const stabEl = e.target.closest('[data-stab]');
+  if (stabEl) {
+    settingsState.tab = stabEl.dataset.stab;
+    settingsState.editing = null;
+    settingsState.addingIn = null;
+    renderSettings();
+    return;
+  }
+  const sactEl = e.target.closest('[data-sact]');
+  if (!sactEl) return;
+  const act = sactEl.dataset.sact;
+  const id = sactEl.dataset.id || '';
+  const catId = sactEl.dataset.catid || '';
+
+  if (act === 'export') { exportMenuJson(); return; }
+
+  // ---- SHOP ----
+  if (act === 'save-shop') {
+    const s = MENU.shop;
+    s.name = $('#sf-shop-name').value.trim() || s.name;
+    s.tagline = $('#sf-shop-tagline').value.trim();
+    s.phone = $('#sf-shop-phone').value.trim();
+    s.hours = $('#sf-shop-hours').value.trim();
+    s.wifi = $('#sf-shop-wifi').value.trim();
+    const pu = parseInt($('#sf-shop-priceunit').value);
+    if (pu > 0) { s.priceUnit = pu; PRICE_UNIT = pu; }
+    saveMenuOverride();
+    toast('Đã lưu thông tin cửa hàng');
+    renderSettings();
+    return;
+  }
+
+  // ---- TOPPINGS ----
+  if (act === 'add-topping') { settingsState.addingIn={section:'toppings'}; settingsState.editing=null; renderSettings(); return; }
+  if (act === 'edit-topping') { settingsState.editing={section:'toppings',id}; settingsState.addingIn=null; renderSettings(); return; }
+  if (act === 'cancel-topping-form') { settingsState.editing=null; settingsState.addingIn=null; renderSettings(); return; }
+  if (act === 'del-topping') {
+    if (!confirm('Xóa topping "' + (MENU.toppings.find(t=>t.id===id)?.name||id) + '"?')) return;
+    MENU.toppings = MENU.toppings.filter(t => t.id !== id);
+    for (const g of MENU.toppingGroups) if (g.toppingIds) g.toppingIds = g.toppingIds.filter(tid => tid !== id);
+    saveMenuOverride(); toast('Đã xóa topping'); renderSettings(); return;
+  }
+  if (act === 'save-new-topping' || act === 'save-edit-topping') {
+    const name = $('#sf-topping-name').value.trim();
+    const tid = $('#sf-topping-id').value.trim();
+    const price = parseFloat($('#sf-topping-price').value) || 0;
+    if (!name || !tid) { toast('Cần nhập đủ tên và ID'); return; }
+    if (act === 'save-new-topping' && MENU.toppings.find(t => t.id === tid)) { toast('ID đã tồn tại'); return; }
+    if (act === 'save-new-topping') {
+      MENU.toppings.push({id:tid, name, price});
+    } else {
+      const t = MENU.toppings.find(t => t.id === id);
+      if (t) { t.name = name; t.price = price; }
+    }
+    saveMenuOverride();
+    toast(act === 'save-new-topping' ? 'Đã thêm topping' : 'Đã lưu');
+    settingsState.editing=null; settingsState.addingIn=null; renderSettings(); return;
+  }
+
+  // ---- TOPPING GROUPS ----
+  if (act === 'add-tgroup') { settingsState.addingIn={section:'toppingGroups'}; settingsState.editing=null; renderSettings(); return; }
+  if (act === 'edit-tgroup') { settingsState.editing={section:'toppingGroups',id}; settingsState.addingIn=null; renderSettings(); return; }
+  if (act === 'cancel-tgroup-form') { settingsState.editing=null; settingsState.addingIn=null; renderSettings(); return; }
+  if (act === 'del-tgroup') {
+    if (!confirm('Xóa nhóm topping này?')) return;
+    MENU.toppingGroups = MENU.toppingGroups.filter(g => g.id !== id);
+    saveMenuOverride(); toast('Đã xóa nhóm topping'); renderSettings(); return;
+  }
+  if (act === 'save-new-tgroup' || act === 'save-edit-tgroup') {
+    const name = $('#sf-tgroup-name').value.trim();
+    const gid = $('#sf-tgroup-id').value.trim();
+    const typeRadio = $('input[name="sf-tgroup-type"]:checked');
+    const isAll = !typeRadio || typeRadio.value === 'all';
+    if (!name || !gid) { toast('Cần nhập đủ tên và ID'); return; }
+    if (act === 'save-new-tgroup' && MENU.toppingGroups.find(g => g.id === gid)) { toast('ID đã tồn tại'); return; }
+    const groupData = {id:gid, name};
+    if (isAll) { groupData.all = true; }
+    else { groupData.toppingIds = readCheckedValues('.sf-tgroup-tid'); }
+    if (act === 'save-new-tgroup') {
+      MENU.toppingGroups.push(groupData);
+    } else {
+      const idx = MENU.toppingGroups.findIndex(g => g.id === id);
+      if (idx >= 0) MENU.toppingGroups[idx] = groupData;
+    }
+    saveMenuOverride();
+    toast(act === 'save-new-tgroup' ? 'Đã thêm nhóm topping' : 'Đã lưu');
+    settingsState.editing=null; settingsState.addingIn=null; renderSettings(); return;
+  }
+
+  // ---- OPTION GROUPS ----
+  if (act === 'add-optgroup') { settingsState.addingIn={section:'optionGroups'}; settingsState.editing=null; renderSettings(); return; }
+  if (act === 'edit-optgroup') { settingsState.editing={section:'optionGroups',id}; settingsState.addingIn=null; renderSettings(); return; }
+  if (act === 'cancel-optgroup-form') { settingsState.editing=null; settingsState.addingIn=null; renderSettings(); return; }
+  if (act === 'del-optgroup') {
+    if (!confirm('Xóa nhóm tùy chọn này?')) return;
+    MENU.optionGroups = MENU.optionGroups.filter(g => g.id !== id);
+    saveMenuOverride(); toast('Đã xóa'); renderSettings(); return;
+  }
+  if (act === 'add-optval') {
+    const list = $('#sf-optval-list');
+    if (!list) return;
+    const idx = list.querySelectorAll('.sf-optval-row').length;
+    const row = document.createElement('div');
+    row.className = 'size-row sf-optval-row';
+    row.dataset.vi = idx;
+    row.innerHTML = `<input type="text" class="sf-optval-value" placeholder="value" style="max-width:80px">
+      <input type="text" class="sf-optval-label" placeholder="Nhãn">
+      <input type="text" class="sf-optval-delta" placeholder="Phụ phí" style="max-width:150px">
+      <button class="btn btn-danger-ghost btn-sm" data-sact="del-optval" data-vi="${idx}" style="padding:4px 8px;flex-shrink:0">×</button>`;
+    list.appendChild(row);
+    return;
+  }
+  if (act === 'del-optval') {
+    const vi = parseInt(sactEl.dataset.vi);
+    const list = $('#sf-optval-list');
+    if (list) { const rows = list.querySelectorAll('.sf-optval-row'); if (rows[vi]) rows[vi].remove(); }
+    return;
+  }
+  if (act === 'save-new-optgroup' || act === 'save-edit-optgroup') {
+    const label = $('#sf-optgroup-label').value.trim();
+    const gid = $('#sf-optgroup-id').value.trim();
+    const required = $('#sf-optgroup-required').value === 'true';
+    const defVal = $('#sf-optgroup-default').value.trim();
+    const values = readOptValsFromForm();
+    if (!label || !gid) { toast('Cần nhập đủ tên và ID'); return; }
+    if (!values.length) { toast('Cần ít nhất 1 lựa chọn'); return; }
+    if (act === 'save-new-optgroup' && MENU.optionGroups.find(g => g.id === gid)) { toast('ID đã tồn tại'); return; }
+    const groupData = {id:gid, label, type:'single', required, default:defVal, values};
+    if (act === 'save-new-optgroup') {
+      MENU.optionGroups.push(groupData);
+    } else {
+      const idx = MENU.optionGroups.findIndex(g => g.id === id);
+      if (idx >= 0) MENU.optionGroups[idx] = groupData;
+    }
+    saveMenuOverride();
+    toast(act === 'save-new-optgroup' ? 'Đã thêm nhóm tùy chọn' : 'Đã lưu');
+    settingsState.editing=null; settingsState.addingIn=null; renderSettings(); return;
+  }
+
+  // ---- CATEGORIES ----
+  if (act === 'toggle-cat') {
+    settingsState.expandedCat = settingsState.expandedCat === id ? null : id;
+    if (settingsState.editing?.section !== 'cat-name') { settingsState.editing=null; settingsState.addingIn=null; }
+    renderSettings(); return;
+  }
+  if (act === 'add-cat') { settingsState.addingIn={section:'categories'}; settingsState.editing=null; renderSettings(); return; }
+  if (act === 'edit-cat-name') {
+    settingsState.editing={section:'cat-name',id};
+    if (settingsState.expandedCat !== id) settingsState.expandedCat = null;
+    renderSettings(); return;
+  }
+  if (act === 'del-cat') {
+    const catObj = MENU.categories.find(c => c.id === id);
+    if (!confirm(`Xóa danh mục "${catObj?.name||id}" và ${catObj?.items?.length||0} món?`)) return;
+    MENU.categories = MENU.categories.filter(c => c.id !== id);
+    if (settingsState.expandedCat === id) settingsState.expandedCat = null;
+    saveMenuOverride(); toast('Đã xóa danh mục'); renderSettings(); return;
+  }
+  if (act === 'cancel-cat-form') { settingsState.addingIn=null; settingsState.editing=null; renderSettings(); return; }
+  if (act === 'save-new-cat') {
+    const name = $('#sf-cat-name').value.trim();
+    const cid = $('#sf-cat-id').value.trim();
+    if (!name || !cid) { toast('Cần nhập đủ tên và ID'); return; }
+    if (MENU.categories.find(c => c.id === cid)) { toast('ID đã tồn tại'); return; }
+    MENU.categories.push({id:cid, name, items:[]});
+    saveMenuOverride(); toast('Đã thêm danh mục');
+    settingsState.addingIn=null; settingsState.expandedCat=cid; renderSettings(); return;
+  }
+  if (act === 'save-edit-cat') {
+    const cat = MENU.categories.find(c => c.id === id);
+    const newName = $('#sf-cat-name');
+    if (cat && newName?.value.trim()) { cat.name = newName.value.trim(); saveMenuOverride(); toast('Đã lưu tên danh mục'); }
+    settingsState.editing=null; renderSettings(); return;
+  }
+
+  // ---- ITEMS ----
+  if (act === 'add-item') {
+    settingsState.addingIn={section:'items', catId};
+    settingsState.editing=null;
+    settingsState.expandedCat=catId;
+    renderSettings(); return;
+  }
+  if (act === 'edit-item') {
+    settingsState.editing={section:'item', id};
+    settingsState.addingIn=null;
+    const ownerCat = MENU.categories.find(c => c.items.some(i => i.id === id));
+    if (ownerCat) settingsState.expandedCat=ownerCat.id;
+    renderSettings(); return;
+  }
+  if (act === 'del-item') {
+    const ownerCat = MENU.categories.find(c => c.id === catId);
+    const itemName = ownerCat?.items?.find(i => i.id === id)?.name || id;
+    if (!confirm(`Xóa món "${itemName}"?`)) return;
+    if (ownerCat) ownerCat.items = ownerCat.items.filter(i => i.id !== id);
+    saveMenuOverride(); toast('Đã xóa món'); renderSettings(); return;
+  }
+  if (act === 'cancel-item-form') { settingsState.addingIn=null; settingsState.editing=null; renderSettings(); return; }
+  if (act === 'add-size') {
+    const list = $('#sf-item-sizes');
+    if (!list) return;
+    const idx = list.querySelectorAll('.sf-size-row').length;
+    const row = document.createElement('div');
+    row.className = 'size-row sf-size-row'; row.dataset.si = idx;
+    row.innerHTML = `<input type="text" class="sf-size-size" placeholder="Size" style="max-width:60px">
+      <input type="number" class="sf-size-price" placeholder="Giá">
+      <button class="btn btn-danger-ghost btn-sm" data-sact="del-size" data-si="${idx}" style="padding:4px 8px;flex-shrink:0">×</button>`;
+    list.appendChild(row); return;
+  }
+  if (act === 'del-size') {
+    const si = parseInt(sactEl.dataset.si);
+    const list = $('#sf-item-sizes');
+    if (list) { const rows = list.querySelectorAll('.sf-size-row'); if (rows[si]) rows[si].remove(); }
+    return;
+  }
+  if (act === 'save-new-item' || act === 'save-edit-item') {
+    const name = $('#sf-item-name').value.trim();
+    const iid = $('#sf-item-id').value.trim();
+    const note = $('#sf-item-note').value.trim();
+    const hot = $('#sf-item-hot').checked;
+    const isNewFlag = $('#sf-item-isnew').checked;
+    const sizes = readSizesFromForm();
+    const optGroupIds = readCheckedValues('.sf-item-optg');
+    const tGroupIds = readCheckedValues('.sf-item-tgrp');
+    if (!name || !iid) { toast('Cần nhập đủ tên và ID'); return; }
+    if (!sizes.length) { toast('Cần ít nhất 1 size và giá'); return; }
+    if (act === 'save-new-item' && MENU.categories.some(c => c.items.some(i => i.id === iid))) { toast('ID món đã tồn tại'); return; }
+    const itemData = {id:iid, name, sizes, optionGroupIds:optGroupIds, toppingGroupIds:tGroupIds};
+    if (hot) itemData.hot = true;
+    if (isNewFlag) itemData.isNew = true;
+    if (note) itemData.note = note;
+    if (act === 'save-new-item') {
+      const cat = MENU.categories.find(c => c.id === catId);
+      if (cat) cat.items.push(itemData);
+    } else {
+      const ownerCat = MENU.categories.find(c => c.items.some(i => i.id === id));
+      if (ownerCat) { const idx = ownerCat.items.findIndex(i => i.id === id); if (idx >= 0) ownerCat.items[idx] = itemData; }
+    }
+    saveMenuOverride();
+    toast(act === 'save-new-item' ? 'Đã thêm món' : 'Đã lưu');
+    settingsState.editing=null; settingsState.addingIn=null; renderSettings(); return;
+  }
+
+  // ---- PRINTER SETTINGS ----
+  if (act === 'ps-connect') {
+    const url = ($('#ps-server-url')?.value || '').trim();
+    const statusEl = $('#ps-connect-status');
+    if (!url) { toast('Nhập URL server trước'); return; }
+    statusEl.textContent = 'Đang kết nối...';
+    statusEl.style.color = 'var(--muted)';
+    fetch(url + '/api/printers/shared')
+      .then(r => r.json())
+      .then(data => {
+        const list = data.printers || [];
+        const opts = '<option value="">— Chọn máy in —</option>' +
+          list.map(p => `<option value="${escHtml(p.name)}">${escHtml(p.name)} (${escHtml(p.device)})</option>`).join('');
+        $$('.ps-printer-select').forEach(sel => {
+          const saved = sel.dataset.saved;
+          sel.innerHTML = opts;
+          if (saved) sel.value = saved;
+        });
+        getPrintSettings().serverUrl = url;
+        savePrintSettings();
+        statusEl.textContent = `✅ Đã kết nối — ${list.length} máy in`;
+        statusEl.style.color = 'var(--ok)';
+      })
+      .catch(err => {
+        statusEl.textContent = `❌ Không kết nối được: ${err.message}`;
+        statusEl.style.color = 'var(--danger)';
+      });
+    return;
+  }
+  if (act === 'ps-save') {
+    const ps = getPrintSettings();
+    ps.serverUrl    = ($('#ps-server-url')?.value || '').trim();
+    ps.receipt.mode    = ($('input[name="ps-receipt-mode"]:checked')?.value) || 'dialog';
+    ps.receipt.printer = $('#ps-receipt-printer')?.value || '';
+    ps.barTicket.mode    = ($('input[name="ps-barTicket-mode"]:checked')?.value) || 'dialog';
+    ps.barTicket.printer = $('#ps-bar-printer')?.value || '';
+    savePrintSettings();
+    toast('Đã lưu cài đặt máy in');
+    return;
+  }
+}
+
+// ============== SETTINGS DRAG-AND-DROP ==============
+function clearDndIndicators() {
+  $$('.drag-above, .drag-below, .drag-over-cat').forEach(el => {
+    el.classList.remove('drag-above', 'drag-below', 'drag-over-cat');
+  });
+}
+
+function handleSettingsDnD(e) {
+  if (e.type === 'dragstart') {
+    const handle = e.target.classList.contains('drag-handle') ? e.target : null;
+    if (!handle) return;
+    _dndSrc = {
+      section: handle.dataset.dragSection,
+      id: handle.dataset.dragId,
+      catId: handle.dataset.dragCatid || null
+    };
+    const parentRow = handle.closest('.settings-row, .settings-cat-block');
+    if (parentRow) {
+      e.dataTransfer.setDragImage(parentRow, 20, Math.round(parentRow.offsetHeight / 2));
+      parentRow.classList.add('dragging');
+    }
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', _dndSrc.id);
+    return;
+  }
+
+  if (e.type === 'dragend') {
+    clearDndIndicators();
+    $$('.dragging').forEach(el => el.classList.remove('dragging'));
+    _dndSrc = null; _dndOverEl = null;
+    return;
+  }
+
+  if (e.type === 'dragover') {
+    if (!_dndSrc) return;
+    clearDndIndicators();
+    const section = _dndSrc.section;
+
+    if (section === 'items') {
+      const catHeader = e.target.closest('.settings-cat-header');
+      if (catHeader) {
+        const toCatId = catHeader.closest('[data-cat]')?.dataset.cat;
+        if (toCatId && toCatId !== _dndSrc.catId) {
+          e.preventDefault();
+          catHeader.classList.add('drag-over-cat');
+          _dndOverEl = { type: 'cat-header', catId: toCatId };
+          return;
+        }
+      }
+      const row = e.target.closest('.settings-row[data-drag-section="items"]');
+      if (!row || row.dataset.dragId === _dndSrc.id) return;
+      e.preventDefault();
+      const r = row.getBoundingClientRect();
+      _dndInsertBefore = e.clientY < r.top + r.height / 2;
+      row.classList.add(_dndInsertBefore ? 'drag-above' : 'drag-below');
+      _dndOverEl = { type: 'row', id: row.dataset.dragId, catId: row.dataset.dragCatid };
+      return;
+    }
+
+    if (section === 'categories') {
+      const catBlock = e.target.closest('.settings-cat-block[data-drag-section="categories"]');
+      if (!catBlock || catBlock.dataset.dragId === _dndSrc.id) return;
+      e.preventDefault();
+      const r = catBlock.getBoundingClientRect();
+      _dndInsertBefore = e.clientY < r.top + r.height / 2;
+      catBlock.classList.add(_dndInsertBefore ? 'drag-above' : 'drag-below');
+      _dndOverEl = { type: 'row', id: catBlock.dataset.dragId, catId: null };
+      return;
+    }
+
+    const row = e.target.closest(`.settings-row[data-drag-section="${section}"]`);
+    if (!row || row.dataset.dragId === _dndSrc.id) return;
+    e.preventDefault();
+    const r = row.getBoundingClientRect();
+    _dndInsertBefore = e.clientY < r.top + r.height / 2;
+    row.classList.add(_dndInsertBefore ? 'drag-above' : 'drag-below');
+    _dndOverEl = { type: 'row', id: row.dataset.dragId, catId: null };
+    return;
+  }
+
+  if (e.type === 'drop') {
+    e.preventDefault();
+    if (!_dndSrc || !_dndOverEl) { clearDndIndicators(); _dndSrc = null; _dndOverEl = null; return; }
+    const { section, id: fromId, catId: fromCatId } = _dndSrc;
+
+    if (_dndOverEl.type === 'cat-header') {
+      const fromCat = MENU.categories.find(c => c.id === fromCatId);
+      const toCat = MENU.categories.find(c => c.id === _dndOverEl.catId);
+      if (fromCat && toCat) {
+        const idx = fromCat.items.findIndex(i => i.id === fromId);
+        if (idx >= 0) {
+          const [item] = fromCat.items.splice(idx, 1);
+          toCat.items.push(item);
+          saveMenuOverride();
+          toast(`Đã chuyển "${item.name}" sang "${toCat.name}"`);
+        }
+      }
+      _dndSrc = null; _dndOverEl = null;
+      renderSettings();
+      return;
+    }
+
+    const toId = _dndOverEl.id;
+    const toCatId = _dndOverEl.catId;
+
+    let arr;
+    if (section === 'toppings') arr = MENU.toppings;
+    else if (section === 'toppingGroups') arr = MENU.toppingGroups;
+    else if (section === 'optionGroups') arr = MENU.optionGroups;
+    else if (section === 'categories') arr = MENU.categories;
+    else if (section === 'items') {
+      if (fromCatId === toCatId) {
+        arr = MENU.categories.find(c => c.id === fromCatId)?.items;
+      } else {
+        const fromCat = MENU.categories.find(c => c.id === fromCatId);
+        const toCat = MENU.categories.find(c => c.id === toCatId);
+        if (fromCat && toCat) {
+          const idx = fromCat.items.findIndex(i => i.id === fromId);
+          if (idx >= 0) {
+            const [item] = fromCat.items.splice(idx, 1);
+            const toIdx = toCat.items.findIndex(i => i.id === toId);
+            toCat.items.splice(toIdx < 0 ? toCat.items.length : (_dndInsertBefore ? toIdx : toIdx + 1), 0, item);
+            saveMenuOverride();
+            toast(`Đã chuyển "${item.name}" sang "${toCat.name}"`);
+          }
+        }
+        _dndSrc = null; _dndOverEl = null;
+        renderSettings();
+        return;
+      }
+    }
+
+    if (arr) {
+      const fromIdx = arr.findIndex(x => x.id === fromId);
+      if (fromIdx >= 0) {
+        const [item] = arr.splice(fromIdx, 1);
+        const toIdx = arr.findIndex(x => x.id === toId);
+        arr.splice(toIdx < 0 ? arr.length : (_dndInsertBefore ? toIdx : toIdx + 1), 0, item);
+        saveMenuOverride();
+      }
+    }
+
+    _dndSrc = null; _dndOverEl = null;
+    renderSettings();
+  }
+}
+
+function renderAll() {
+  const inSettings = state.view === 'settings';
+  const inOrders = state.view === 'orders';
+  $('#orders-view').classList.toggle('show', inOrders);
+  $('#settings-view').classList.toggle('show', inSettings);
+  if (state.view === 'order') {
+    renderMenu();
+    renderCart();
+  } else if (inSettings) {
+    renderSettings();
+    $('#mobile-detail-panel').classList.remove('expanded', 'always-on');
+    $('#mobile-summary').classList.add('hidden');
+  } else {
+    renderOrders();
+    $('#mobile-detail-panel').classList.remove('expanded', 'always-on');
+    $('#mobile-summary').classList.add('hidden');
+  }
+  // Always update badge
+  const count = [
+    ...state.carts.filter(c => deriveStatus(c) !== 'draft'),
+    ...state.archived
+  ].length;
+  $('#orders-badge').textContent = count;
+}
+
+// ============== ACTIONS ==============
+function handleCartAction(act) {
+  const cart = getActiveCart();
+  if (!cart) return;
+
+  if (act === 'toggle-paid') {
+    setPaid(cart, !cart.paid);
+  } else if (act === 'toggle-delivered') {
+    setDelivered(cart, !cart.delivered);
+  } else if (act === 'cancel') {
+    if (!confirm('Hủy đơn ' + cart.displayCode + '?')) return;
+    setCancelled(cart);
+  } else if (act === 'print-receipt') {
+    printReceipt(cart);
+    return;
+  } else if (act === 'print-bar') {
+    printBarTicket(cart);
+    return;
+  }
+  renderAll();
+}
+
+// ============== PRINT ==============
+function buildLineDescription(line) {
+  const found = getItem(line.itemId);
+  if (!found) return null;
+  const item = found.item;
+  const parts = [`Size ${line.size}`];
+  if (item.optionGroupIds) {
+    for (const gid of item.optionGroupIds) {
+      const grp = getOptionGroup(gid);
+      if (!grp) continue;
+      const v = line.options[grp.id];
+      if (!v) continue;
+      const valObj = grp.values.find(vv => vv.value === v);
+      if (!valObj) continue;
+      if (grp.required) parts.push(`${grp.label}: ${valObj.label}`);
+      else if (v !== grp.default) parts.push(valObj.label);
+    }
+  }
+  const tops = (line.toppings || []).map(t => {
+    const top = getTopping(t.id);
+    return top ? (top.name + (t.qty > 1 ? ` x${t.qty}` : '')) : '';
+  }).filter(Boolean);
+  return { item, parts, tops, line };
+}
+
+async function sendToPrintServer(pdfDataUri, serverUrl, printerName, jobName) {
+  const base64 = pdfDataUri.split(',')[1];
+  try {
+    const resp = await fetch(serverUrl + '/api/print', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ printer: printerName, pdf: base64, jobName })
+    });
+    const result = await resp.json();
+    if (result.ok) toast('✅ Đã gửi lệnh in thành công');
+    else toast('❌ Server in báo lỗi: ' + (result.error || '?'));
+  } catch (err) {
+    toast('❌ Không kết nối được server in: ' + err.message);
+  }
+}
+
+function triggerPdfIframe(uri, frameId) {
+  let frame = document.getElementById(frameId);
+  if (!frame) {
+    frame = document.createElement('iframe');
+    frame.id = frameId;
+    frame.style.display = 'none';
+    document.body.appendChild(frame);
+  }
+  frame.src = uri;
+}
+
+async function printReceipt(cart) {
+  if (!window.jspdf?.jsPDF) { toast('Thư viện PDF chưa tải xong, thử lại sau giây lát.'); return; }
+  if (!await loadPdfFont()) return;
+
+  const sub  = calcCartSubtotal(cart);
+  const disc = calcCartDiscount(cart);
+  const total = sub - disc;
+  const dtStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' +
+                new Date().toLocaleDateString('vi-VN');
+
+  const W = 58, LX = 3, RX = 55, CX = 29; // page width, left/right margin, center
+
+  // ── Pass 1: đo chiều cao nội dung bằng doc tạm ──────────────────
+  const mDoc = makePdfDoc('p', W, 500);
+  const validLines = cart.lines
+    .map(l => ({ line: l, desc: buildLineDescription(l) }))
+    .filter(x => x.desc);
+
+  let h = 8;
+  mDoc.setFontSize(11);
+  h += mDoc.splitTextToSize(MENU.shop.name, 52).length * 5;
+  mDoc.setFontSize(7);
+  h += mDoc.splitTextToSize(MENU.shop.tagline, 52).length * 3.2 + 3.2; // tagline + phone
+  h += 5;  // divider + gap
+  h += 4.5 + 3.5 + 3.5; // title + code + time
+  if (cart.customerName) h += 3.5;
+  h += 5;  // divider + gap
+
+  for (const { line, desc } of validLines) {
+    mDoc.setFontSize(8);
+    h += mDoc.splitTextToSize(desc.item.name + ' x' + line.qty, 36).length * 4;
+    mDoc.setFontSize(6.5);
+    h += mDoc.splitTextToSize(desc.parts.join(' - '), 50).length * 3;
+    if (desc.tops.length) h += mDoc.splitTextToSize('+ ' + desc.tops.join(', '), 50).length * 3;
+    if (line.note) h += 3;
+    h += 2.5; // gap giữa các món
+  }
+
+  h += 5;   // divider + gap
+  h += 3.5 + 3.5; // tam tinh + tong
+  if (disc > 0) h += 3.5;
+  h += 5;   // divider + gap
+  h += 3.5 + 3.2 + 3.5 + 8; // footer + bottom pad
+  h = Math.ceil(h);
+
+  // ── Pass 2: vẽ thực sự ─────────────────────────────────────────
+  const doc = makePdfDoc('p', W, h);
+  let y = 8;
+
+  const divider = () => {
+    doc.setLineWidth(0.2);
+    doc.line(LX, y, RX, y);
+    y += 3;
+  };
+
+  // Header
+  doc.setFontSize(11);
+  const shopLines = doc.splitTextToSize(MENU.shop.name, 52);
+  doc.text(shopLines, CX, y, { align: 'center' });
+  y += shopLines.length * 5;
+
+  doc.setFontSize(7);
+  const tagLines = doc.splitTextToSize(MENU.shop.tagline, 52);
+  doc.text(tagLines, CX, y, { align: 'center' });
+  y += tagLines.length * 3.2;
+  doc.text('SDT: ' + MENU.shop.phone, CX, y, { align: 'center' });
+  y += 3.5;
+
+  divider();
+
+  doc.setFontSize(9);
+  doc.text('HOA DON', CX, y, { align: 'center' });
+  y += 4.5;
+
+  doc.setFontSize(7);
+  doc.text('Ma: ' + cart.displayCode, LX, y);
+  y += 3.5;
+  doc.text('Gio: ' + dtStr, LX, y);
+  y += 3.5;
+  if (cart.customerName) {
+    doc.text('Khach: ' + cart.customerName, LX, y);
+    y += 3.5;
+  }
+  y += 1;
+  divider();
+
+  // Danh sách món
+  for (const { line, desc } of validLines) {
+    const linePrice = fmtPrice(calcLinePrice(line)) + 'd';
+
+    doc.setFontSize(8);
+    const nameWrapped = doc.splitTextToSize(desc.item.name + ' x' + line.qty, 36);
+    doc.text(nameWrapped, LX, y);
+    doc.text(linePrice, RX, y, { align: 'right' }); // giá căn phải theo dòng đầu tên
+    y += nameWrapped.length * 4;
+
+    doc.setFontSize(6.5);
+    const optWrapped = doc.splitTextToSize(desc.parts.join(' - '), 50);
+    doc.text(optWrapped, LX + 2, y);
+    y += optWrapped.length * 3;
+
+    if (desc.tops.length) {
+      const topWrapped = doc.splitTextToSize('+ ' + desc.tops.join(', '), 50);
+      doc.text(topWrapped, LX + 2, y);
+      y += topWrapped.length * 3;
+    }
+    if (line.note) {
+      doc.text('Ghi chu: ' + line.note, LX + 2, y, { maxWidth: 50 });
+      y += 3;
+    }
+    y += 2.5;
+  }
+
+  divider();
+
+  // Tổng tiền
+  doc.setFontSize(7);
+  doc.text('Tam tinh', LX, y);
+  doc.text(fmtPrice(sub) + 'd', RX, y, { align: 'right' });
+  y += 3.5;
+
+  if (disc > 0) {
+    doc.text('Giam gia', LX, y);
+    doc.text('-' + fmtPrice(disc) + 'd', RX, y, { align: 'right' });
+    y += 3.5;
+  }
+
+  doc.setFontSize(9);
+  doc.text('TONG', LX, y);
+  doc.text(fmtPrice(total) + 'd', RX, y, { align: 'right' });
+  y += 5;
+
+  divider();
+
+  // Footer
+  doc.setFontSize(7);
+  doc.text('Cam on quy khach!', CX, y, { align: 'center' });
+  y += 3.5;
+  doc.setFontSize(6.5);
+  doc.text('Wifi: ' + MENU.shop.wifi, CX, y, { align: 'center' });
+  y += 3.2;
+  doc.setFontSize(7);
+  doc.text('Hen gap lai :)', CX, y, { align: 'center' });
+
+  const uri = doc.output('datauristring');
+  const ps = getPrintSettings();
+  if (ps.receipt.mode === 'server' && ps.serverUrl && ps.receipt.printer) {
+    await sendToPrintServer(uri, ps.serverUrl, ps.receipt.printer, 'HoaDon-' + cart.displayCode);
+  } else {
+    doc.autoPrint();
+    triggerPdfIframe(doc.output('datauristring'), 'receiptPrintFrame');
+  }
+}
+
+// Helper dùng chung: load font Roboto TTF từ CDN, cache vào _barTicketFont
+async function loadPdfFont() {
+  if (_barTicketFont) return true;
+  toast('Đang tải font lần đầu...');
+  try {
+    const resp = await fetch('https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf');
+    const buf = await resp.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+    _barTicketFont = btoa(bin);
+    return true;
+  } catch {
+    toast('Không tải được font — kiểm tra kết nối mạng.');
+    return false;
+  }
+}
+
+// Helper: tạo jsPDF doc với font Roboto đã đăng ký
+function makePdfDoc(orientation, w, h) {
+  const doc = new (window.jspdf.jsPDF)(orientation, 'mm', [w, h]);
+  doc.addFileToVFS('roboto.ttf', _barTicketFont);
+  doc.addFont('roboto.ttf', 'roboto', 'normal');
+  doc.setFont('roboto', 'normal');
+  return doc;
+}
+
+async function printBarTicket(cart) {
+  if (!window.jspdf?.jsPDF) { toast('Thư viện PDF chưa tải xong, thử lại sau giây lát.'); return; }
+  if (!await loadPdfFont()) return;
+
+  // Đếm tổng ly hợp lệ
+  let totalCups = 0;
+  for (const line of cart.lines) if (buildLineDescription(line)) totalCups += line.qty;
+  if (!totalCups) { toast('Không có món để in.'); return; }
+
+  // Tạo PDF — mỗi ly 1 trang 50×30mm ngang
+  const doc = makePdfDoc('l', 50, 30);
+
+  let pageIdx = 0;
+  for (const line of cart.lines) {
+    const desc = buildLineDescription(line);
+    if (!desc) continue;
+
+    for (let q = 0; q < line.qty; q++) {
+      if (pageIdx > 0) doc.addPage([50, 30], 'l');
+      pageIdx++;
+
+      // Tên món + chỉ số nếu qty > 1
+      const qLabel = line.qty > 1 ? ` (${q + 1}/${line.qty})` : '';
+      doc.setFontSize(8);
+      doc.text(2, 4, desc.item.name + qLabel, { maxWidth: 46 });
+
+      // Kẻ ngang trên
+      doc.setLineWidth(0.25);
+      doc.line(0, 6.5, 50, 6.5);
+
+      // Chi tiết: tùy chọn + topping + ghi chú
+      const rows = [desc.parts.join(' · ')];
+      if (desc.tops.length) rows.push('+ ' + desc.tops.join(', '));
+      if (line.note) rows.push('Ghi chu: ' + line.note);
+
+      doc.setFontSize(6);
+      doc.text(2, 9.5, rows.join('\n'), { maxWidth: 46 });
+
+      // Kẻ ngang dưới
+      doc.line(0, 25, 50, 25);
+
+      // Footer: mã đơn · vị trí · hotline
+      doc.setFontSize(5.5);
+      doc.text(2, 28.5, `${cart.displayCode}  *  ${pageIdx}/${totalCups}  *  ${MENU.shop.phone}`);
+    }
+  }
+
+  const uri = doc.output('datauristring');
+  const ps = getPrintSettings();
+  if (ps.barTicket.mode === 'server' && ps.serverUrl && ps.barTicket.printer) {
+    await sendToPrintServer(uri, ps.serverUrl, ps.barTicket.printer, 'PhieuPhaChe-' + cart.displayCode);
+  } else {
+    doc.autoPrint();
+    triggerPdfIframe(doc.output('datauristring'), 'barTicketPrintFrame');
+  }
+}
+
+// ============== EVENT BINDING ==============
+function bindEvents() {
+  $('#settings-view').addEventListener('click', handleSettingsEvent);
+  ['dragstart','dragend','dragover','drop'].forEach(evt =>
+    $('#settings-view').addEventListener(evt, handleSettingsDnD)
+  );
+
+  $$('.top-tab').forEach(b => {
+    b.addEventListener('click', () => {
+      state.view = b.dataset.view;
+      $$('.top-tab').forEach(x => x.classList.toggle('active', x === b));
+      renderAll();
+    });
+  });
+
+  $('#order-filters').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-filter]');
+    if (!b) return;
+    state.orderFilter = b.dataset.filter;
+    $$('#order-filters button').forEach(x => x.classList.toggle('active', x === b));
+    renderOrders();
+  });
+
+  $('#search-input').addEventListener('input', (e) => {
+    state.search = e.target.value;
+    renderMenu();
+  });
+
+  $('#cat-nav').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-cat]');
+    if (!b) return;
+    state.catFilter = b.dataset.cat || null;
+    renderMenu();
+  });
+
+  $('#menu-content').addEventListener('click', (e) => {
+    const card = e.target.closest('.item-card');
+    if (!card) return;
+    let cart = getActiveCart();
+    if (!cart) cart = newCart();
+    if (!isCartEditable(cart)) {
+      // Auto-create new cart if current one is not editable
+      newCart();
+      renderAll();
+      toast('Đã tạo giỏ mới (giỏ cũ đã chốt)');
+    }
+    const sizeTag = e.target.closest('.price-tag[data-size]');
+    openItemModal(card.dataset.item, undefined, sizeTag ? sizeTag.dataset.size : undefined);
+  });
+
+  $('#cart-tabs').addEventListener('click', (e) => {
+    const pinBtn = e.target.closest('[data-pin]');
+    if (pinBtn) { e.stopPropagation(); togglePin(pinBtn.dataset.pin); return; }
+    const closeBtn = e.target.closest('[data-close]');
+    if (closeBtn) { e.stopPropagation(); closeCart(closeBtn.dataset.close); return; }
+    if (e.target.closest('#add-cart-btn')) { newCart(); renderAll(); return; }
+    const tab = e.target.closest('[data-cart]');
+    if (tab) {
+      state.activeCartId = tab.dataset.cart;
+      pendingRemoveIdx = null;
+      saveState();
+      renderCart();
+    }
+  });
+
+  $('#cart-body').addEventListener('click', (e) => {
+    const cart = getActiveCart();
+    if (!cart) return;
+    const confirmBtn = e.target.closest('[data-rm-confirm]');
+    if (confirmBtn) {
+      cart.lines.splice(parseInt(confirmBtn.dataset.rmConfirm), 1);
+      pendingRemoveIdx = null;
+      saveState(); renderCart();
+      return;
+    }
+    const rmBtn = e.target.closest('[data-rm-line]');
+    if (rmBtn) {
+      pendingRemoveIdx = parseInt(rmBtn.dataset.rmLine);
+      renderCart();
+      return;
+    }
+    // Any other click clears pending confirm
+    if (pendingRemoveIdx !== null) { pendingRemoveIdx = null; renderCart(); }
+    const qtyBtn = e.target.closest('[data-line-qty]');
+    if (qtyBtn) {
+      const i = parseInt(qtyBtn.dataset.lineQty);
+      const d = parseInt(qtyBtn.dataset.d);
+      cart.lines[i].qty = Math.max(1, cart.lines[i].qty + d);
+      saveState(); renderCart();
+      return;
+    }
+    const editBtn = e.target.closest('[data-edit-line]');
+    if (editBtn) {
+      openItemModal(cart.lines[parseInt(editBtn.dataset.editLine)].itemId, parseInt(editBtn.dataset.editLine));
+    }
+  });
+
+  $('#cart-body').addEventListener('input', (e) => {
+    if (e.target.id === 'customer-name') {
+      const cart = getActiveCart();
+      if (cart) {
+        cart.customerName = e.target.value;
+        saveState();
+        renderCartTabs();
+      }
+    }
+  });
+
+  $('#cart-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act]');
+    if (btn) handleCartAction(btn.dataset.act);
+  });
+  $('#cart-footer').addEventListener('input', (e) => {
+    const cart = getActiveCart();
+    if (!cart) return;
+    if (e.target.id === 'discount-value') {
+      cart.discount.value = Math.max(0, parseFloat(e.target.value) || 0);
+      saveState(); renderCart();
+    } else if (e.target.id === 'discount-type') {
+      cart.discount.type = e.target.value;
+      saveState(); renderCart();
+    }
+  });
+
+  $('#modal-close').addEventListener('click', closeModal);
+  $('#modal-cancel').addEventListener('click', closeModal);
+  $('#item-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'item-modal') closeModal();
+  });
+  $('#modal-add').addEventListener('click', commitModal);
+  $('#modal-body').addEventListener('click', modalEvent);
+  $('#modal-body').addEventListener('contextmenu', modalEvent);
+  $('#modal-foot-qty').addEventListener('click', modalEvent);
+
+  $('#order-list').addEventListener('click', (e) => {
+    const card = e.target.closest('.order-card');
+    if (!card) return;
+    const oid = card.dataset.orderId;
+    const order = [...state.carts, ...state.archived].find(c => c.id === oid);
+    if (!order) return;
+    if (state.carts.find(c => c.id === oid)) {
+      // Switch to that cart
+      state.activeCartId = oid;
+      state.view = 'order';
+      $$('.top-tab').forEach(x => x.classList.toggle('active', x.dataset.view === 'order'));
+      saveState();
+      renderAll();
+    } else {
+      const action = prompt(
+        `Đơn ${order.displayCode} - ${STATUS_META[deriveStatus(order)].label}\nTổng: ${fmtPrice(calcCartTotal(order))}đ\n\nNhập:\n  "in" - in lại hóa đơn\n  "bar" - in phiếu pha chế`
+      );
+      if (action === 'in') printReceipt(order);
+      else if (action === 'bar') printBarTicket(order);
+    }
+  });
+
+  // === MOBILE-SPECIFIC EVENTS ===
+
+  // Mobile menu toolbar (search + cat-nav) lives inside cart-body, re-rendered each time.
+  // Use event delegation on cart-body.
+  $('#cart-body').addEventListener('input', (e) => {
+    if (e.target.id === 'mobile-search-input') {
+      state.search = e.target.value;
+      // Sync to desktop search input too
+      $('#search-input').value = e.target.value;
+      // Re-render only the content area, not the whole cart (to avoid losing input focus)
+      // Easiest: rebuild mobile menu HTML and replace cart-body, but that loses focus.
+      // So: only rebuild the content portion.
+      const contentEl = $('#cart-body .mobile-menu-content');
+      if (contentEl) {
+        // Build only the content, then swap
+        const tmp = document.createElement('div');
+        tmp.innerHTML = buildMobileMenuHtml();
+        const newContent = tmp.querySelector('.mobile-menu-content');
+        if (newContent) contentEl.replaceWith(newContent);
+      }
+    }
+  });
+
+  $('#cart-body').addEventListener('click', (e) => {
+    // Mobile category filter buttons
+    const catBtn = e.target.closest('.cat-nav-mobile button[data-cat]');
+    if (catBtn) {
+      state.catFilter = catBtn.dataset.cat || null;
+      // Update active state
+      const buttons = catBtn.parentElement.querySelectorAll('button');
+      buttons.forEach(b => b.classList.toggle('active', b === catBtn));
+      // Rebuild content portion only
+      const contentEl = $('#cart-body .mobile-menu-content');
+      if (contentEl) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = buildMobileMenuHtml();
+        const newContent = tmp.querySelector('.mobile-menu-content');
+        if (newContent) contentEl.replaceWith(newContent);
+      }
+      return;
+    }
+    // Item card click
+    const card = e.target.closest('.item-card');
+    if (!card) return;
+    let cart = getActiveCart();
+    if (!cart) cart = newCart();
+    if (!isCartEditable(cart)) {
+      newCart();
+      renderAll();
+      toast('Đã tạo giỏ mới (giỏ cũ đã chốt)');
+    }
+    const sizeTag = e.target.closest('.price-tag[data-size]');
+    openItemModal(card.dataset.item, undefined, sizeTag ? sizeTag.dataset.size : undefined);
+  });
+
+  // Mobile pay button -> expand detail panel
+  $('#mobile-pay-btn').addEventListener('click', () => {
+    if ($('#mobile-pay-btn').disabled) return;
+    expandMobileDetail();
+  });
+
+  // Mobile collapse button -> hide detail panel
+  $('#mobile-collapse-btn').addEventListener('click', collapseMobileDetail);
+
+  // Mobile detail panel events (lines, qty, edit, customer name)
+  function bindCartLineEvents(rootSelector) {
+    const root = $(rootSelector);
+    if (!root) return;
+    root.addEventListener('click', (e) => {
+      const cart = getActiveCart();
+      if (!cart) return;
+      const confirmBtn = e.target.closest('[data-rm-confirm]');
+      if (confirmBtn) {
+        cart.lines.splice(parseInt(confirmBtn.dataset.rmConfirm), 1);
+        pendingRemoveIdx = null;
+        saveState(); renderCart();
+        return;
+      }
+      const rmBtn = e.target.closest('[data-rm-line]');
+      if (rmBtn) {
+        pendingRemoveIdx = parseInt(rmBtn.dataset.rmLine);
+        renderCart();
+        return;
+      }
+      // Any other click clears pending confirm
+      if (pendingRemoveIdx !== null) { pendingRemoveIdx = null; renderCart(); }
+      const qtyBtn = e.target.closest('[data-line-qty]');
+      if (qtyBtn) {
+        const i = parseInt(qtyBtn.dataset.lineQty);
+        const d = parseInt(qtyBtn.dataset.d);
+        cart.lines[i].qty = Math.max(1, cart.lines[i].qty + d);
+        saveState(); renderCart();
+        return;
+      }
+      const editBtn = e.target.closest('[data-edit-line]');
+      if (editBtn) {
+        openItemModal(cart.lines[parseInt(editBtn.dataset.editLine)].itemId, parseInt(editBtn.dataset.editLine));
+      }
+    });
+    root.addEventListener('input', (e) => {
+      if (e.target.id === 'customer-name') {
+        const cart = getActiveCart();
+        if (cart) {
+          cart.customerName = e.target.value;
+          saveState();
+          renderCartTabs();
+        }
+      }
+    });
+  }
+  bindCartLineEvents('#mobile-detail-content');
+
+  // Mobile detail footer events (action buttons + discount)
+  $('#mobile-detail-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act]');
+    if (btn) handleCartAction(btn.dataset.act);
+  });
+  $('#mobile-detail-footer').addEventListener('input', (e) => {
+    const cart = getActiveCart();
+    if (!cart) return;
+    if (e.target.id === 'discount-value') {
+      cart.discount.value = Math.max(0, parseFloat(e.target.value) || 0);
+      saveState(); renderCart();
+    } else if (e.target.id === 'discount-type') {
+      cart.discount.type = e.target.value;
+      saveState(); renderCart();
+    }
+  });
+
+  // Re-render on viewport changes (rotation, dev tools toggle)
+  window.addEventListener('resize', () => {
+    clearTimeout(window._resizeTimer);
+    window._resizeTimer = setTimeout(() => renderAll(), 150);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (state.activeCartId && state.mobileDetailExpanded.has(state.activeCartId)) {
+        collapseMobileDetail();
+        return;
+      }
+      closeModal();
+    }
+  });
+}
+
+// ============== INIT ==============
+async function init() {
+  try {
+    const res = await loadMenu();
+    PRICE_UNIT = (MENU.shop && MENU.shop.priceUnit) || 1000;
+    if (res.source === 'embedded') {
+      const banner = document.createElement('div');
+      banner.className = 'menu-error';
+      banner.innerHTML = '<strong>⚠ Đang dùng menu nhúng (mặc định)</strong>Không tải được file <code>menu.json</code> - có thể do mở file trực tiếp (file://) thay vì qua HTTP server. Để chỉnh menu, hãy chạy qua local server (vd: <code>python -m http.server</code>) hoặc edit phần JSON cuối file HTML.';
+      $('#menu-panel').insertBefore(banner, $('.search-bar'));
+    }
+  } catch (e) {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>Lỗi tải menu</h2><p>' + escHtml(e.message) + '</p></div>';
+    return;
+  }
+
+  loadState();
+  // Migrate old state if needed: ensure displayCode exists
+  for (const c of state.carts) {
+    if (!c.displayCode) c.displayCode = genDisplayCode();
+    // Ensure flag fields exist (for backward compat)
+    if (typeof c.paid !== 'boolean') c.paid = false;
+    if (typeof c.delivered !== 'boolean') c.delivered = false;
+    if (typeof c.cancelled !== 'boolean') c.cancelled = false;
+    if (typeof c.pinned !== 'boolean') c.pinned = false;
+  }
+  for (const c of state.archived) {
+    if (!c.displayCode) c.displayCode = genDisplayCode();
+  }
+
+  bindEvents();
+  renderAll();
+}
+
+init();
+})();
+</script>
+
+<!-- Embedded menu fallback -->
+<script type="application/json" id="embedded-menu">{
+  "shop": {
+    "name": "CHABAR",
+    "tagline": "Trà sữa CHABAR",
+    "phone": "0777.369.959",
+    "hours": "11:00 - 24:00",
+    "wifi": "camonquykhach",
+    "priceUnit": 1000
+  },
+
+  "optionGroups": [
+    {
+      "id": "opt_sugar",
+      "label": "Đường",
+      "type": "single",
+      "required": true,
+      "default": "100",
+      "values": [
+        { "value": "0",   "label": "0%" },
+        { "value": "30",  "label": "30%" },
+        { "value": "50",  "label": "50%" },
+        { "value": "70",  "label": "70%" },
+        { "value": "100", "label": "100%" }
+      ]
+    },
+    {
+      "id": "opt_ice",
+      "label": "Đá",
+      "type": "single",
+      "required": true,
+      "default": "100",
+      "values": [
+        { "value": "0",   "label": "Không đá" },
+        { "value": "50",  "label": "50%" },
+        { "value": "75",  "label": "75%" },
+        { "value": "100", "label": "100%" }
+      ]
+    },
+    {
+      "id": "opt_matcha_grade",
+      "label": "Loại bột matcha",
+      "type": "single",
+      "required": false,
+      "default": "standard",
+      "values": [
+        { "value": "standard", "label": "Tiêu chuẩn", "priceDelta": { "L": 0, "XL": 0 } },
+        { "value": "uji",      "label": "Uji",        "priceDelta": { "L": 5, "XL": 8 } },
+        { "value": "aki",      "label": "Aki",        "priceDelta": { "L": 8, "XL": 12 } }
+      ]
+    },
+    {
+      "id": "opt_extra_pearl",
+      "label": "Trân châu thêm",
+      "type": "single",
+      "required": false,
+      "default": "normal",
+      "values": [
+        { "value": "normal", "label": "Bình thường", "priceDelta": 0 },
+        { "value": "double", "label": "x2 trân châu", "priceDelta": 7 }
+      ]
+    }
+  ],
+
+  "toppings": [
+    { "id": "thach_cu_nang",     "name": "Thạch củ năng",          "price": 6 },
+    { "id": "thach_dua",         "name": "Thạch dừa",              "price": 6 },
+    { "id": "thach_suong_sao",   "name": "Thạch sương sáo",        "price": 5 },
+    { "id": "pudding_dua_luoi",  "name": "Pudding dưa lưới",       "price": 5 },
+    { "id": "pudding_khoai_mon", "name": "Pudding khoai môn",      "price": 5 },
+    { "id": "thach_pho_mai",     "name": "Thạch phô mai",          "price": 6 },
+    { "id": "banh_plan",         "name": "Bánh plan",              "price": 6 },
+    { "id": "pudding_trung",     "name": "Pudding trứng",          "price": 5 },
+    { "id": "pudding_socola",    "name": "Pudding socola",         "price": 5 },
+    { "id": "tran_chau_den",     "name": "Trân châu đen",          "price": 5 },
+    { "id": "tran_chau_trang",   "name": "Trân châu trắng",        "price": 5 },
+    { "id": "thach_soi",         "name": "Thạch sợi",              "price": 5 },
+    { "id": "pho_mai_tuoi",      "name": "Phô mai tươi",           "price": 9 },
+    { "id": "trai_cay_tuoi",     "name": "Trái cây tươi",          "price": 10 },
+    { "id": "kem_trung",         "name": "Kem trứng",              "price": 9 },
+    { "id": "kem_muoi",          "name": "Kem muối/Macchiato",     "price": 9 },
+    { "id": "thach_coffee",      "name": "Thạch coffee",           "price": 5 },
+    { "id": "thach_trai_cay",    "name": "Thạch trái cây",         "price": 5 },
+    { "id": "thap_cam",          "name": "Topping thập cẩm (10 loại)", "price": 15 },
+    { "id": "thach_no",          "name": "Thạch nổ (củ năng)",     "price": 6 }
+  ],
+
+  "toppingGroups": [
+    {
+      "id": "default-topping-group",
+      "name": "Tất cả topping",
+      "toppingIds": [
+        "thach_cu_nang", "thach_dua", "thach_suong_sao",
+        "pudding_dua_luoi", "pudding_khoai_mon",
+        "thach_pho_mai", "banh_plan",
+        "pudding_trung", "pudding_socola",
+        "tran_chau_den", "tran_chau_trang", "thach_soi",
+        "pho_mai_tuoi", "trai_cay_tuoi",
+        "kem_trung", "kem_muoi",
+        "thach_coffee", "thach_trai_cay",
+        "thap_cam", "thach_no"
+      ]
+    }
+  ],
+
+  "categories": [
+    {
+      "id": "tra_sua_chabar",
+      "name": "Trà Sữa CHABAR",
+      "items": [
+        {
+          "id": "ts_truyen_thong_full_1l",
+          "name": "TS Truyền Thống Full-Topping 1 Lít",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 25 },
+            { "size": "XL", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": []
+        },
+        {
+          "id": "ts_oolong_full_1l",
+          "name": "TS Oolong Full-Topping 1 Lít",
+          "hot": true,
+          "sizes": [
+            { "size": "XL", "price": 33 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": []
+        },
+        {
+          "id": "ts_truyen_thong",
+          "name": "TS Truyền Thống (chưa thạch)",
+          "sizes": [
+            { "size": "M",  "price": 12 },
+            { "size": "L",  "price": 17 },
+            { "size": "XL", "price": 24 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_oolong",
+          "name": "TS Oolong (chưa thạch)",
+          "sizes": [
+            { "size": "M",  "price": 17 },
+            { "size": "L",  "price": 22 },
+            { "size": "XL", "price": 27 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_gao_rang",
+          "name": "Trà Sữa Gạo Rang (có thạch coffee)",
+          "hot": true,
+          "sizes": [
+            { "size": "L", "price": 30 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "ts_thach_dao",
+          "name": "Trà Sữa Thạch Đào (có thạch đào)",
+          "hot": true,
+          "sizes": [
+            { "size": "L", "price": 32 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "sua_tuoi_tran_chau",
+          "name": "Sữa Tươi Trân Châu Đường Đen",
+          "sizes": [
+            { "size": "M",  "price": 23 },
+            { "size": "L",  "price": 28 },
+            { "size": "XL", "price": 35 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice", "opt_extra_pearl"],
+          "toppingGroupIds": ["default-topping-group"],
+          "note": "Size XL đã x2 trân châu"
+        }
+      ]
+    },
+    {
+      "id": "hong_tra_soda",
+      "name": "Hồng Trà - Soda",
+      "items": [
+        {
+          "id": "hong_tra_sui_bot",
+          "name": "Hồng Trà Sủi Bọt",
+          "hot": true,
+          "sizes": [
+            { "size": "M",  "price": 7 },
+            { "size": "L",  "price": 12 },
+            { "size": "XL", "price": 17 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "hong_tra_bi_dao",
+          "name": "Hồng Trà Bí Đao",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 19 },
+            { "size": "XL", "price": 22 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "soda_bien_xanh",
+          "name": "Soda Biển Xanh",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 19 },
+            { "size": "XL", "price": 25 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "soda_viet_quat",
+          "name": "Soda Việt Quất",
+          "sizes": [
+            { "size": "L",  "price": 19 },
+            { "size": "XL", "price": 25 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "tra_nguyen_vi_kem",
+      "name": "Trà Nguyên Vị Kem",
+      "items": [
+        {
+          "id": "hong_tra_kem",
+          "name": "Hồng Trà Kem Trứng/Kem Muối",
+          "hot": true,
+          "sizes": [
+            { "size": "M",  "price": 16 },
+            { "size": "L",  "price": 21 },
+            { "size": "XL", "price": 26 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_nhai_kem",
+          "name": "Trà Nhài Kem Trứng/Kem Muối",
+          "sizes": [
+            { "size": "L", "price": 27 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_gao_rang_kem",
+          "name": "Trà Gạo Rang Kem Trứng/Kem Muối",
+          "sizes": [
+            { "size": "L", "price": 29 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "tra_trai_cay",
+      "name": "Trà Trái Cây",
+      "items": [
+        {
+          "id": "tra_nhiet_doi",
+          "name": "Trà Nhiệt Đới",
+          "hot": true,
+          "sizes": [{ "size": "L", "price": 29 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_dau_cam",
+          "name": "Trà Dâu Cam",
+          "hot": true,
+          "sizes": [{ "size": "L", "price": 29 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_xoai_chanh_leo",
+          "name": "Trà Xoài Chanh Leo",
+          "sizes": [{ "size": "L", "price": 29 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_mang_cau",
+          "name": "Trà Mãng Cầu",
+          "hot": true,
+          "sizes": [{ "size": "L", "price": 29 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_nhan_thai_lan",
+          "name": "Trà Nhãn Thái Lan",
+          "hot": true,
+          "sizes": [{ "size": "L", "price": 29 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "tra_dao_dam",
+          "name": "Trà Đào Dầm",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 19 },
+            { "size": "XL", "price": 24 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "dark_lava",
+      "name": "Dark Lava Viền Socola",
+      "items": [
+        {
+          "id": "dark_bac_ha",
+          "name": "Dark Bạc Hà",
+          "hot": true,
+          "sizes": [{ "size": "L", "price": 32 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "dark_truyen_thong",
+          "name": "Dark Truyền Thống",
+          "sizes": [{ "size": "L", "price": 32 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "dark_socola_latte",
+          "name": "Dark Socola Latte",
+          "isNew": true,
+          "hot": true,
+          "sizes": [{ "size": "L", "price": 36 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "dark_socola_bac_ha",
+          "name": "Dark Socola Bạc Hà",
+          "isNew": true,
+          "hot": true,
+          "sizes": [{ "size": "L", "price": 40 }],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "matcha_latte",
+      "name": "Matcha Latte",
+      "items": [
+        {
+          "id": "matcha_sua_hat_oatside",
+          "name": "Matcha Sữa Hạt Oatside",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 28 },
+            { "size": "XL", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice", "opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_sua_tuoi",
+          "name": "Matcha Sữa Tươi",
+          "sizes": [
+            { "size": "L",  "price": 28 },
+            { "size": "XL", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice", "opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_sua_gau",
+          "name": "Matcha Sữa Gấu",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 35 },
+            { "size": "XL", "price": 45 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice", "opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_xoai",
+          "name": "Matcha Xoài",
+          "sizes": [
+            { "size": "L",  "price": 32 },
+            { "size": "XL", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice", "opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_dau_tay",
+          "name": "Matcha Dâu Tây",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 32 },
+            { "size": "XL", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice", "opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "matcha_sua_chuoi",
+          "name": "Matcha Sữa Chuối",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 32 },
+            { "size": "XL", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice", "opt_matcha_grade"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    },
+    {
+      "id": "cacao_heyday",
+      "name": "Cacao Heyday",
+      "items": [
+        {
+          "id": "cacao_sua_hat_oatside",
+          "name": "Cacao Sữa Hạt Oatside",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 28 },
+            { "size": "XL", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_sua_tuoi",
+          "name": "Cacao Sữa Tươi",
+          "sizes": [
+            { "size": "L",  "price": 28 },
+            { "size": "XL", "price": 38 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_sua_chuoi",
+          "name": "Cacao Sữa Chuối",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 35 },
+            { "size": "XL", "price": 45 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_kem_muoi",
+          "name": "Cacao Kem Muối",
+          "hot": true,
+          "sizes": [
+            { "size": "L",  "price": 37 },
+            { "size": "XL", "price": 47 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_dau",
+          "name": "Cacao Dâu",
+          "sizes": [
+            { "size": "L",  "price": 32 },
+            { "size": "XL", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        },
+        {
+          "id": "cacao_sua_gau",
+          "name": "Cacao Sữa Gấu",
+          "sizes": [
+            { "size": "L",  "price": 35 },
+            { "size": "XL", "price": 42 }
+          ],
+          "optionGroupIds": ["opt_sugar", "opt_ice"],
+          "toppingGroupIds": ["default-topping-group"]
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+</body>
+</html>

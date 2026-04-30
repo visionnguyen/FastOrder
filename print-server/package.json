@@ -1,0 +1,14 @@
+{
+  "name": "chabar-print-server",
+  "version": "1.0.0",
+  "description": "CHABAR Print Server - tự động in hóa đơn và phiếu pha chế",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pdf-to-printer": "^5.1.1"
+  }
+}

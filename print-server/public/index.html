@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHABAR Print Server</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 14px; }
+  .topbar { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+  .topbar h1 { font-size: 18px; font-weight: 700; }
+  .topbar .ver { font-size: 12px; opacity: 0.55; margin-left: auto; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.err { background: #fee2e2; color: #991b1b; }
+  .container { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+  .card-header { padding: 14px 18px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+  .card-header h2 { font-size: 14px; font-weight: 700; flex: 1; }
+  .card-body { padding: 16px 18px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px;
+         font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent;
+         transition: opacity 0.15s; }
+  .btn:hover { opacity: 0.82; }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .btn-primary { background: #6366f1; color: #fff; border-color: #6366f1; }
+  .btn-danger  { background: #ef4444; color: #fff; border-color: #ef4444; }
+  .btn-ghost   { background: transparent; border-color: #d1d5db; color: #374151; }
+  .btn-sm      { padding: 4px 10px; font-size: 12px; }
+  input[type=text] { width: 100%; padding: 8px 10px; border: 1.5px solid #d1d5db; border-radius: 6px;
+                     font-size: 13px; outline: none; transition: border-color 0.15s; }
+  input[type=text]:focus { border-color: #6366f1; }
+  .printer-row { display: flex; align-items: center; gap: 10px; padding: 10px 0;
+                 border-bottom: 1px solid #f3f4f6; }
+  .printer-row:last-child { border-bottom: none; }
+  .printer-name { flex: 1; font-weight: 500; }
+  .printer-sub  { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .status-bar { padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; display: none; }
+  .status-bar.ok  { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+  .status-bar.err { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+  .share-form { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .share-form input { flex: 1; }
+  .empty-msg { color: #9ca3af; font-size: 13px; padding: 12px 0; }
+  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span>🖨️</span>
+  <h1>CHABAR Print Server</h1>
+  <span class="badge ok" id="server-status">Đang kết nối...</span>
+  <span class="ver" id="server-ver"></span>
+</div>
+
+<div class="container">
+
+  <!-- Máy in hệ thống -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Máy in hệ thống</h2>
+      <button class="btn btn-primary btn-sm" id="btn-scan">🔍 Scan ngay</button>
+    </div>
+    <div class="card-body">
+      <div id="scan-status" class="status-bar"></div>
+      <div id="system-printer-list"><div class="empty-msg">Nhấn "Scan ngay" để quét máy in.</div></div>
+    </div>
+  </div>
+
+  <!-- Máy in đã chia sẻ -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Máy in đã chia sẻ</h2>
+    </div>
+    <div class="card-body">
+      <div id="shared-status" class="status-bar"></div>
+      <div id="shared-printer-list"><div class="empty-msg">Chưa có máy in nào được chia sẻ.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BASE = '';  // same origin
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function showStatus(elId, msg, type) {
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.className = 'status-bar ' + type;
+  el.style.display = 'block';
+  if (type === 'ok') setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ── Khởi động: kiểm tra server status ───────────────────────────────────────
+async function checkStatus() {
+  try {
+    const data = await fetch('/api/status').then(r => r.json());
+    const badge = document.getElementById('server-status');
+    badge.textContent = data.printerReady ? '● Sẵn sàng' : '⚠ Thiếu thư viện in';
+    badge.className = 'badge ' + (data.printerReady ? 'ok' : 'err');
+    document.getElementById('server-ver').textContent = 'v' + data.version;
+    if (!data.printerReady) {
+      showStatus('scan-status', 'Chưa cài pdf-to-printer. Chạy: npm install trong thư mục print-server', 'err');
+      document.getElementById('scan-status').style.display = 'block';
+    }
+  } catch (e) {
+    const badge = document.getElementById('server-status');
+    badge.textContent = '● Lỗi kết nối';
+    badge.className = 'badge err';
+  }
+}
+
+// ── Quét máy in hệ thống ─────────────────────────────────────────────────────
+async function scanPrinters() {
+  const btn = document.getElementById('btn-scan');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span> Đang quét...';
+  try {
+    const data = await fetch('/api/printers/system').then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    renderSystemPrinters(data.printers);
+    showStatus('scan-status', `Tìm thấy ${data.printers.length} máy in.`, 'ok');
+  } catch (e) {
+    showStatus('scan-status', 'Lỗi: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔍 Scan ngay';
+  }
+}
+
+function renderSystemPrinters(printers) {
+  const el = document.getElementById('system-printer-list');
+  if (!printers.length) { el.innerHTML = '<div class="empty-msg">Không tìm thấy máy in nào.</div>'; return; }
+  el.innerHTML = printers.map(p => `
+    <div class="printer-row" id="sys-${encodeURIComponent(p.name)}">
+      <div class="printer-name">
+        ${p.name}
+        ${p.isDefault ? '<span style="font-size:11px;color:#6366f1;margin-left:4px">(mặc định)</span>' : ''}
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" class="share-name-input" placeholder="Đặt tên chia sẻ..." style="width:170px"
+               data-device="${escAttr(p.name)}">
+        <button class="btn btn-primary btn-sm" onclick="sharePrinter('${escAttr(p.name)}', this)">Chia sẻ</button>
+      </div>
+    </div>`).join('');
+}
+
+function escAttr(s) { return s.replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+// ── Chia sẻ máy in ──────────────────────────────────────────────────────────
+async function sharePrinter(device, btn) {
+  const row = btn.closest('.printer-row');
+  const input = row.querySelector('.share-name-input');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+
+  btn.disabled = true;
+  try {
+    const data = await fetch('/api/printers/shared', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, device })
+    }).then(r => r.json());
+    if (data.error) throw new Error(data.error);
+    input.value = '';
+    showStatus('scan-status', `Đã chia sẻ "${name}".`, 'ok');
+    loadSharedPrinters();
+  } catch (e) {
+    showStatus('scan-status', 'Lỗi: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Tải danh sách máy in đã chia sẻ ────────────────────────────────────────
+async function loadSharedPrinters() {
+  try {
+    const data = await fetch('/api/printers/shared').then(r => r.json());
+    const el = document.getElementById('shared-printer-list');
+    if (!data.printers.length) {
+      el.innerHTML = '<div class="empty-msg">Chưa có máy in nào được chia sẻ.</div>';
+      return;
+    }
+    el.innerHTML = data.printers.map(p => `
+      <div class="printer-row">
+        <div>
+          <div class="printer-name">${p.name}</div>
+          <div class="printer-sub">Thiết bị: ${p.device}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="removePrinter('${escAttr(p.name)}')">Xóa</button>
+      </div>`).join('');
+  } catch (e) {
+    showStatus('shared-status', 'Lỗi tải danh sách: ' + e.message, 'err');
+  }
+}
+
+// ── Xóa máy in chia sẻ ─────────────────────────────────────────────────────
+async function removePrinter(name) {
+  if (!confirm(`Xóa "${name}" khỏi danh sách chia sẻ?`)) return;
+  try {
+    await fetch('/api/printers/shared/' + encodeURIComponent(name), { method: 'DELETE' });
+    showStatus('shared-status', `Đã xóa "${name}".`, 'ok');
+    loadSharedPrinters();
+  } catch (e) {
+    showStatus('shared-status', 'Lỗi: ' + e.message, 'err');
+  }
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-scan').addEventListener('click', scanPrinters);
+checkStatus();
+loadSharedPrinters();
+</script>
+</body>
+</html>

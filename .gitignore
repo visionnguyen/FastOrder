@@ -1,0 +1,15 @@
+# Node.js (print-server)
+print-server/node_modules/
+print-server/config.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+
+# Backup / test files
+*.default.ok
+menu_2.json
