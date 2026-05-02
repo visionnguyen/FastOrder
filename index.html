@@ -930,7 +930,32 @@ input, select, textarea {
   flex-shrink: 0;
 }
 
+@keyframes btn-shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  35%       { transform: translateX(6px); }
+  55%       { transform: translateX(-4px); }
+  75%       { transform: translateX(4px); }
+  90%       { transform: translateX(-2px); }
+}
+.btn-shake { animation: btn-shake 0.45s ease; }
+
+@keyframes opt-required-flash {
+  0%   { background: transparent; outline-color: transparent; }
+  15%  { background: rgba(192,57,43,0.10); outline-color: var(--danger); }
+  35%  { background: transparent; outline-color: transparent; }
+  55%  { background: rgba(192,57,43,0.10); outline-color: var(--danger); }
+  75%  { background: transparent; outline-color: transparent; }
+  90%  { background: rgba(192,57,43,0.06); outline-color: var(--danger); }
+  100% { background: transparent; outline-color: transparent; }
+}
 .opt-section { margin-bottom: 16px; }
+.opt-section.required-empty {
+  border-radius: var(--radius);
+  outline: 2px solid transparent;
+  animation: opt-required-flash 0.9s ease forwards;
+}
+.opt-section.required-empty h4 { color: var(--danger); }
 .opt-section h4 {
   font-size: 12px;
   text-transform: uppercase;
@@ -1699,6 +1724,9 @@ input, select, textarea {
 .settings-cat-block.dragging { opacity: 0.35; }
 .settings-row.drag-above { border-top: 2px solid var(--accent) !important; }
 .settings-row.drag-below { border-bottom: 2px solid var(--accent) !important; }
+.sf-optval-row.drag-above { border-top: 2px solid var(--accent) !important; }
+.sf-optval-row.drag-below { border-bottom: 2px solid var(--accent) !important; }
+.sf-optval-row.dragging { opacity: 0.35; }
 .settings-cat-block.drag-above { border-top: 2px solid var(--accent) !important; }
 .settings-cat-block.drag-below { border-bottom: 2px solid var(--accent) !important; }
 .settings-cat-header.drag-over-cat { outline: 2px dashed var(--accent); outline-offset: -3px; background: var(--surface-2) !important; }
@@ -2361,7 +2389,7 @@ function renderItemModal() {
     for (const gid of item.optionGroupIds) {
       const grp = getOptionGroup(gid);
       if (!grp) continue;
-      html += `<div class="opt-section"><h4>${escHtml(grp.label)}</h4><div class="opt-chips">`;
+      html += `<div class="opt-section" data-optgroup-id="${grp.id}"><h4>${escHtml(grp.label)}</h4><div class="opt-chips">`;
       for (const v of grp.values) {
         const sel = modalState.options[grp.id] === v.value ? 'selected' : '';
         let deltaTxt = '';
@@ -2451,6 +2479,33 @@ function closeModal() {
 function commitModal() {
   if (!modalState) return;
   modalState.note = $('#line-note') ? $('#line-note').value : '';
+
+  // Validate required options
+  const found = getItem(modalState.itemId);
+  if (found && found.item.optionGroupIds) {
+    const missing = found.item.optionGroupIds.filter(gid => {
+      const grp = getOptionGroup(gid);
+      return grp && grp.required && !modalState.options[gid];
+    });
+    if (missing.length > 0) {
+      missing.forEach(gid => {
+        const sec = $('#modal-body').querySelector(`.opt-section[data-optgroup-id="${gid}"]`);
+        if (sec) {
+          sec.classList.remove('required-empty');
+          void sec.offsetWidth;
+          sec.classList.add('required-empty');
+          sec.addEventListener('animationend', () => sec.classList.remove('required-empty'), { once: true });
+        }
+      });
+      const btn = $('#modal-add');
+      btn.classList.remove('btn-shake');
+      void btn.offsetWidth;
+      btn.classList.add('btn-shake');
+      btn.addEventListener('animationend', () => btn.classList.remove('btn-shake'), { once: true });
+      return;
+    }
+  }
+
   let cart = getActiveCart();
   if (!cart) cart = newCart();
   if (!isCartEditable(cart)) {
@@ -3095,6 +3150,7 @@ function renderOptionGroupForm(group) {
   const values = group?.values || [];
   const valRows = values.map((v, i) => `
     <div class="size-row sf-optval-row" data-vi="${i}">
+      <span class="drag-handle" draggable="true" data-drag-section="optval" data-drag-vi="${i}" title="Kéo để sắp xếp">⠿</span>
       <input type="text" class="sf-optval-value" value="${escHtml(v.value)}" placeholder="value" style="max-width:80px">
       <input type="text" class="sf-optval-label" value="${escHtml(v.label)}" placeholder="Nhãn">
       <input type="text" class="sf-optval-delta" value="${escHtml(v.priceDelta!=null?(typeof v.priceDelta==='object'?JSON.stringify(v.priceDelta):String(v.priceDelta)):'')}" placeholder="Phụ phí (0 hay {&quot;L&quot;:5})" style="max-width:150px">
@@ -3583,6 +3639,17 @@ function handleSettingsDnD(e) {
   if (e.type === 'dragstart') {
     const handle = e.target.classList.contains('drag-handle') ? e.target : null;
     if (!handle) return;
+    if (handle.dataset.dragSection === 'optval') {
+      const parentRow = handle.closest('.sf-optval-row');
+      _dndSrc = { section: 'optval', id: handle.dataset.dragVi, el: parentRow };
+      if (parentRow) {
+        e.dataTransfer.setDragImage(parentRow, 20, Math.round(parentRow.offsetHeight / 2));
+        parentRow.classList.add('dragging');
+      }
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', handle.dataset.dragVi);
+      return;
+    }
     _dndSrc = {
       section: handle.dataset.dragSection,
       id: handle.dataset.dragId,
@@ -3609,6 +3676,17 @@ function handleSettingsDnD(e) {
     if (!_dndSrc) return;
     clearDndIndicators();
     const section = _dndSrc.section;
+
+    if (section === 'optval') {
+      const row = e.target.closest('.sf-optval-row');
+      if (!row || row === _dndSrc.el) return;
+      e.preventDefault();
+      const r = row.getBoundingClientRect();
+      _dndInsertBefore = e.clientY < r.top + r.height / 2;
+      row.classList.add(_dndInsertBefore ? 'drag-above' : 'drag-below');
+      _dndOverEl = { type: 'optval-row', el: row };
+      return;
+    }
 
     if (section === 'items') {
       const catHeader = e.target.closest('.settings-cat-header');
@@ -3656,6 +3734,19 @@ function handleSettingsDnD(e) {
     e.preventDefault();
     if (!_dndSrc || !_dndOverEl) { clearDndIndicators(); _dndSrc = null; _dndOverEl = null; return; }
     const { section, id: fromId, catId: fromCatId } = _dndSrc;
+
+    if (section === 'optval') {
+      clearDndIndicators();
+      const srcEl = _dndSrc.el;
+      const tgtEl = _dndOverEl.el;
+      if (srcEl && tgtEl && srcEl !== tgtEl) {
+        const list = $('#sf-optval-list');
+        if (_dndInsertBefore) list.insertBefore(srcEl, tgtEl);
+        else list.insertBefore(srcEl, tgtEl.nextSibling);
+      }
+      _dndSrc = null; _dndOverEl = null;
+      return;
+    }
 
     if (_dndOverEl.type === 'cat-header') {
       const fromCat = MENU.categories.find(c => c.id === fromCatId);
