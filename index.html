@@ -64,10 +64,53 @@ input, select, textarea {
 /* === LAYOUT === */
 .app {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr 6px var(--cart-width, 420px);
   grid-template-rows: 56px 1fr;
   height: 100vh;
 }
+
+.panel-resizer {
+  grid-column: 2;
+  grid-row: 2;
+  background: var(--line);
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 8;
+  position: relative;
+}
+.panel-resizer:hover,
+.panel-resizer.dragging { background: var(--accent); }
+.panel-resizer-handle {
+  width: 16px;
+  height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  flex-direction: column;
+  gap: 3px;
+}
+.panel-resizer:hover .panel-resizer-handle,
+.panel-resizer.dragging .panel-resizer-handle {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+.panel-resizer-handle span {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.panel-resizer.dragging .panel-resizer-handle span { background: var(--accent); }
 
 .topbar {
   grid-column: 1 / -1;
@@ -163,9 +206,15 @@ input, select, textarea {
 }
 
 .menu-panel {
-  overflow-y: auto;
-  padding: 16px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--bg);
+}
+#menu-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 80px;
 }
 
 .cart-panel {
@@ -177,21 +226,48 @@ input, select, textarea {
 }
 
 /* === MENU PANEL === */
+.cat-nav-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 10px 12px 10px 20px;
+  border-bottom: 1px solid var(--line);
+  gap: 6px;
+}
 .cat-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  margin-bottom: 16px;
-  padding-bottom: 2px;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: var(--bg);
-  padding-top: 12px;
-  margin-top: -4px;
-  scrollbar-width: none;
+  flex: 1;
 }
-.cat-nav::-webkit-scrollbar { display: none; }
+.ui-scale-btns {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.ui-scale-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+  user-select: none;
+}
+.ui-scale-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ui-scale-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
 .cat-nav button {
   padding: 6px 12px;
   background: var(--surface);
@@ -1026,7 +1102,10 @@ input, select, textarea {
 
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
-  .app { grid-template-columns: 1fr 340px; }
+  .app { grid-template-columns: 1fr 6px var(--cart-width, 340px); }
+}
+@media (max-width: 768px) {
+  .panel-resizer { display: none; }
 }
 
 /* Mobile-only summary bar - hidden by default (desktop) */
@@ -1050,6 +1129,7 @@ input, select, textarea {
     height: 100vh;
     height: 100dvh;
   }
+  .panel-resizer { display: none; }
 
   .topbar { padding: 0 12px; gap: 8px; }
   .topbar .tagline { display: none; }
@@ -1644,9 +1724,22 @@ input, select, textarea {
   </header>
 
   <main class="menu-panel" id="menu-panel">
-    <div class="cat-nav" id="cat-nav"></div>
+    <div class="cat-nav-row">
+      <div class="cat-nav" id="cat-nav"></div>
+      <div class="ui-scale-btns">
+        <button class="ui-scale-btn" id="ui-scale-down" title="Giảm cỡ chữ">A−</button>
+        <button class="ui-scale-btn" id="ui-scale-reset" title="Cỡ chữ mặc định">A</button>
+        <button class="ui-scale-btn" id="ui-scale-up" title="Tăng cỡ chữ">A+</button>
+      </div>
+    </div>
     <div id="menu-content"></div>
   </main>
+
+  <div class="panel-resizer" id="panel-resizer">
+    <div class="panel-resizer-handle">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
 
   <aside class="cart-panel" id="cart-panel">
     <div class="cart-tabs" id="cart-tabs"></div>
@@ -1740,6 +1833,64 @@ let state = {
 const STORAGE_KEY = 'chabar_pos_state_v2';
 const MENU_OVERRIDE_KEY = 'chabar_menu_override';
 const PRINT_SETTINGS_KEY = 'chabar_print_settings';
+const UI_CONFIG_KEY = 'chabar-ui-config';
+
+let uiConfig = { fontSize: 100, cartWidth: 420 };
+
+function loadUiConfig() {
+  try {
+    const saved = localStorage.getItem(UI_CONFIG_KEY);
+    if (saved) uiConfig = Object.assign({ fontSize: 100, cartWidth: 420 }, JSON.parse(saved));
+  } catch(e) {}
+}
+function saveUiConfig() {
+  localStorage.setItem(UI_CONFIG_KEY, JSON.stringify(uiConfig));
+}
+function applyUiConfig() {
+  const z = uiConfig.fontSize / 100;
+  $('#cat-nav').style.zoom = z;
+  $('#menu-content').style.zoom = z;
+  $('#cart-tabs').style.zoom = z;
+  $('#cart-body').style.zoom = z;
+  document.querySelector('.app').style.setProperty('--cart-width', uiConfig.cartWidth + 'px');
+  const fs = uiConfig.fontSize;
+  $('#ui-scale-down').classList.toggle('active', fs < 100);
+  $('#ui-scale-reset').classList.toggle('active', fs === 100);
+  $('#ui-scale-up').classList.toggle('active', fs > 100);
+}
+
+function initResizer() {
+  const resizer = $('#panel-resizer');
+  let dragging = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  resizer.addEventListener('mousedown', (e) => {
+    dragging = true;
+    startX = e.clientX;
+    startWidth = uiConfig.cartWidth;
+    resizer.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const dx = startX - e.clientX;
+    uiConfig.cartWidth = Math.max(280, Math.min(700, startWidth + dx));
+    document.querySelector('.app').style.setProperty('--cart-width', uiConfig.cartWidth + 'px');
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    saveUiConfig();
+  });
+}
 
 let settingsState = {
   tab: 'shop',
@@ -3573,6 +3724,7 @@ function renderAll() {
   const inOrders = state.view === 'orders';
   $('#orders-view').classList.toggle('show', inOrders);
   $('#settings-view').classList.toggle('show', inSettings);
+  $('#panel-resizer').style.display = state.view === 'order' ? '' : 'none';
   if (state.view === 'order') {
     renderMenu();
     renderCart();
@@ -4022,6 +4174,19 @@ async function printSingleLine(cart, lineIdx) {
 
 // ============== EVENT BINDING ==============
 function bindEvents() {
+  $('#ui-scale-down').addEventListener('click', () => {
+    uiConfig.fontSize = Math.max(70, uiConfig.fontSize - 5);
+    saveUiConfig(); applyUiConfig();
+  });
+  $('#ui-scale-reset').addEventListener('click', () => {
+    uiConfig.fontSize = 100;
+    saveUiConfig(); applyUiConfig();
+  });
+  $('#ui-scale-up').addEventListener('click', () => {
+    uiConfig.fontSize = Math.min(130, uiConfig.fontSize + 5);
+    saveUiConfig(); applyUiConfig();
+  });
+
   $('#settings-view').addEventListener('click', handleSettingsEvent);
   ['dragstart','dragend','dragover','drop'].forEach(evt =>
     $('#settings-view').addEventListener(evt, handleSettingsDnD)
@@ -4402,13 +4567,14 @@ async function init() {
       const banner = document.createElement('div');
       banner.className = 'menu-error';
       banner.innerHTML = '<strong>⚠ Đang dùng menu nhúng (mặc định)</strong>Không tải được file <code>menu.json</code> - có thể do mở file trực tiếp (file://) thay vì qua HTTP server. Để chỉnh menu, hãy chạy qua local server (vd: <code>python -m http.server</code>) hoặc edit phần JSON cuối file HTML.';
-      $('#menu-panel').insertBefore(banner, $('#cat-nav'));
+      $('#menu-panel').insertBefore(banner, $('.cat-nav-row'));
     }
   } catch (e) {
     document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>Lỗi tải menu</h2><p>' + escHtml(e.message) + '</p></div>';
     return;
   }
 
+  loadUiConfig();
   loadState();
   // Migrate old state if needed: ensure displayCode exists
   for (const c of state.carts) {
@@ -4430,6 +4596,8 @@ async function init() {
 
   bindEvents();
   renderAll();
+  applyUiConfig();
+  initResizer();
 }
 
 init();
