@@ -79,6 +79,7 @@ input, select, textarea {
   gap: 16px;
   box-shadow: var(--shadow);
   z-index: 10;
+  position: relative;
 }
 .topbar .logo {
   font-family: 'Bricolage Grotesque', sans-serif;
@@ -90,6 +91,57 @@ input, select, textarea {
 .topbar .tagline { font-size: 12px; color: rgba(255,255,255,0.7); margin-left: -8px; }
 .topbar .spacer { flex: 1; }
 .topbar .top-tabs { display: flex; gap: 4px; }
+
+.topbar-search {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 33.333%;
+  display: flex;
+  align-items: center;
+}
+.topbar-search input {
+  width: 100%;
+  padding: 7px 30px 7px 30px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  outline: none;
+  font-size: 13px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.topbar-search input::placeholder { color: rgba(255,255,255,0.5); }
+.topbar-search input:focus {
+  border-color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.18);
+}
+.topbar-search .search-icon {
+  position: absolute;
+  left: 9px;
+  font-size: 13px;
+  pointer-events: none;
+  line-height: 1;
+  opacity: 0.8;
+}
+.topbar-search .search-clear {
+  position: absolute;
+  right: 6px;
+  display: none;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 5px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.1s;
+}
+.topbar-search .search-clear:hover { color: #fff; }
+.topbar-search.has-value .search-icon { display: none; }
+.topbar-search.has-value .search-clear { display: block; }
 .topbar .top-tab {
   padding: 8px 14px;
   border-radius: var(--radius-sm);
@@ -125,32 +177,21 @@ input, select, textarea {
 }
 
 /* === MENU PANEL === */
-.search-bar {
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  padding-bottom: 12px;
-  margin-bottom: 8px;
-  z-index: 5;
-}
-.search-bar input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  outline: none;
-  transition: border-color 0.15s;
-}
-.search-bar input:focus { border-color: var(--accent); }
-
 .cat-nav {
   display: flex;
   gap: 6px;
   overflow-x: auto;
   margin-bottom: 16px;
   padding-bottom: 2px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding-top: 12px;
+  margin-top: -4px;
+  scrollbar-width: none;
 }
+.cat-nav::-webkit-scrollbar { display: none; }
 .cat-nav button {
   padding: 6px 12px;
   background: var(--surface);
@@ -250,10 +291,10 @@ input, select, textarea {
 /* === CART PANEL === */
 .cart-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 0;
   border-bottom: 1px solid var(--line);
   padding: 8px 8px 0;
-  overflow-x: auto;
   background: var(--bg-2);
   min-height: 44px;
   align-items: flex-end;
@@ -299,6 +340,14 @@ input, select, textarea {
 }
 .cart-tab .close:hover { background: rgba(0,0,0,0.1); color: var(--danger); }
 .cart-tab .close.disabled { opacity: 0.3; cursor: not-allowed; }
+.cart-tab.paid > span:not(.pin):not(.close) { font-weight: 800; color: var(--ok); }
+.cart-tab.paid.active > span:not(.pin):not(.close) { color: var(--ok); }
+@keyframes tab-flash {
+  0%,100% { background: var(--surface); }
+  30%      { background: var(--accent-2); color: var(--ink); }
+  60%      { background: var(--surface); }
+}
+.cart-tab.flashing { animation: tab-flash 0.5s ease 2; }
 .cart-tab.add-cart {
   background: var(--accent);
   color: #fff;
@@ -475,7 +524,66 @@ input, select, textarea {
   font-size: 11px;
   color: var(--accent);
   text-decoration: underline;
+}
+.line-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-top: 4px;
+  flex-wrap: wrap;
+}
+.line-print-btn {
+  font-size: 11px;
+  color: var(--ok);
+  text-decoration: underline;
+}
+.bar-printed-badge {
+  font-size: 10px;
+  color: var(--ok);
+  background: #E8F5F0;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+#choice-dialog-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#choice-dialog-bg.show { display: flex; }
+.choice-dialog {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px 20px 18px;
+  text-align: center;
+}
+.choice-dialog h4 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+.choice-dialog p {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.choice-dialog-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .empty-cart {
@@ -945,7 +1053,16 @@ input, select, textarea {
 
   .topbar { padding: 0 12px; gap: 8px; }
   .topbar .tagline { display: none; }
+  .topbar .spacer { display: none; }
   .topbar .top-tab { padding: 6px 10px; font-size: 12px; }
+  .topbar-search {
+    position: static;
+    transform: none;
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .topbar-search input { font-size: 12px; padding: 6px 28px 6px 28px; }
 
   /* Hide the desktop menu panel entirely — we use cart-body for menu on mobile */
   .menu-panel { display: none; }
@@ -1006,17 +1123,6 @@ input, select, textarea {
     padding: 10px 12px 8px;
     border-bottom: 1px solid var(--line);
   }
-  .mobile-menu-toolbar .search-input {
-    width: 100%;
-    padding: 9px 12px;
-    border: 1.5px solid var(--line-strong);
-    border-radius: var(--radius);
-    background: var(--surface);
-    outline: none;
-    font-size: 13px;
-    margin-bottom: 8px;
-  }
-  .mobile-menu-toolbar .search-input:focus { border-color: var(--accent); }
   .mobile-menu-toolbar .cat-nav-mobile {
     display: flex;
     gap: 6px;
@@ -1525,6 +1631,11 @@ input, select, textarea {
     <div class="logo">CHA<span class="accent">BAR</span></div>
     <div class="tagline">Order System</div>
     <div class="spacer"></div>
+    <div class="topbar-search" id="topbar-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Tìm món...">
+      <button class="search-clear" id="search-clear" type="button">✕</button>
+    </div>
     <nav class="top-tabs">
       <button class="top-tab active" data-view="order">Order</button>
       <button class="top-tab" data-view="orders">Đơn hàng <span class="badge" id="orders-badge">0</span></button>
@@ -1533,9 +1644,6 @@ input, select, textarea {
   </header>
 
   <main class="menu-panel" id="menu-panel">
-    <div class="search-bar">
-      <input type="text" id="search-input" placeholder="🔍 Tìm món...">
-    </div>
     <div class="cat-nav" id="cat-nav"></div>
     <div id="menu-content"></div>
   </main>
@@ -1595,6 +1703,14 @@ input, select, textarea {
         <button class="btn btn-primary" id="modal-add">Thêm vào giỏ</button>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="choice-dialog-bg">
+  <div class="choice-dialog">
+    <h4 id="choice-dialog-title"></h4>
+    <p id="choice-dialog-msg"></p>
+    <div class="choice-dialog-btns" id="choice-dialog-btns"></div>
   </div>
 </div>
 
@@ -2172,6 +2288,8 @@ function modalEvent(e) {
     const d = parseInt(target.dataset.d);
     modalState.qty = Math.max(1, modalState.qty + d);
   }
+  const noteEl = $('#line-note');
+  if (noteEl) modalState.note = noteEl.value;
   renderItemModal();
 }
 
@@ -2194,7 +2312,8 @@ function commitModal() {
     options: modalState.options,
     toppings: modalState.toppings,
     qty: modalState.qty,
-    note: modalState.note
+    note: modalState.note,
+    barPrinted: false
   };
   if (modalState.editLineIdx != null) {
     cart.lines[modalState.editLineIdx] = line;
@@ -2256,8 +2375,8 @@ function renderCartTabs() {
   for (const c of sorted) {
     const isActive = c.id === state.activeCartId;
     const label = c.customerName || c.displayCode;
-    const pinIcon = c.pinned ? '📌' : '📍';
-    html += `<button class="cart-tab ${isActive ? 'active' : ''}" data-cart="${c.id}">
+    const pinIcon = c.paid ? '💰' : (c.pinned ? '📌' : '📍');
+    html += `<button class="cart-tab ${isActive ? 'active' : ''}${c.paid ? ' paid' : ''}" data-cart="${c.id}">
       <span class="pin ${c.pinned ? 'active' : ''}" data-pin="${c.id}" title="${c.pinned ? 'Bỏ ghim' : 'Ghim giỏ'}">${pinIcon}</span>
       <span>${escHtml(label)}</span>
       ${c.lines.length > 0 ? `<span style="font-size:10px;color:var(--muted)">(${c.lines.reduce((s, l) => s + l.qty, 0)})</span>` : ''}
@@ -2354,7 +2473,7 @@ function buildCartDetailHtml(cart) {
         ${tops.length ? `<div class="line-toppings">+ ${tops.map(escHtml).join(' · ')}</div>` : ''}
         ${line.note ? `<div class="line-toppings">📝 ${escHtml(line.note)}</div>` : ''}
         <div class="line-bottom">
-          ${editable ? `<div class="qty-ctl">
+          ${editable && !line.barPrinted ? `<div class="qty-ctl">
             <button data-line-qty="${i}" data-d="-1">−</button>
             <span>${line.qty}</span>
             <button data-line-qty="${i}" data-d="1">+</button>
@@ -2362,7 +2481,11 @@ function buildCartDetailHtml(cart) {
           <span class="line-price">${fmtPrice(linePrice / line.qty)}đ</span>
           <span class="line-total">${fmtPrice(linePrice)}đ</span>
         </div>
-        ${editable ? `<button class="line-edit" data-edit-line="${i}">Sửa tùy chọn</button>` : ''}
+        <div class="line-actions">
+          ${editable && !line.barPrinted ? `<button class="line-edit" data-edit-line="${i}">Sửa tùy chọn</button>` : ''}
+          <button class="line-print-btn" data-print-line="${i}">🖨 In tem món</button>
+          ${line.barPrinted ? '<span class="bar-printed-badge">✓ Đã in tem</span>' : ''}
+        </div>
       </div>`;
     }
   }
@@ -2511,7 +2634,6 @@ function buildMobileMenuHtml() {
 
   // Toolbar HTML
   let toolbarHtml = `<div class="mobile-menu-toolbar">
-    <input type="text" class="search-input" id="mobile-search-input" placeholder="🔍 Tìm món..." value="${escHtml(state.search)}">
     <div class="cat-nav-mobile" id="mobile-cat-nav">
       <button class="${state.catFilter == null ? 'active' : ''}" data-cat="">Tất cả</button>`;
   for (const c of MENU.categories) {
@@ -2866,7 +2988,7 @@ function renderSettingsCategories() {
           ? `<input type="text" id="sf-cat-name" value="${escHtml(cat.name)}" style="flex:1;padding:4px 8px;font-size:14px;font-weight:700;border:1.5px solid var(--accent);border-radius:4px" onclick="event.stopPropagation()">`
           : `<span class="cat-name">${escHtml(cat.name)}</span><span style="font-size:11px;color:var(--muted);margin-left:4px">(${cat.items.length} món)</span>`
         }
-        <div class="row-btns" onclick="event.stopPropagation()">
+        <div class="row-btns">
           ${isEditingName
             ? `<button class="btn btn-primary btn-sm" data-sact="save-edit-cat" data-id="${cat.id}">Lưu</button>
                <button class="btn btn-ghost btn-sm" data-sact="cancel-cat-form">Hủy</button>`
@@ -3699,6 +3821,30 @@ async function printReceipt(cart) {
   }
 }
 
+// ============== CHOICE DIALOG ==============
+function showChoiceDialog(title, msg, buttons) {
+  $('#choice-dialog-title').textContent = title;
+  $('#choice-dialog-msg').textContent = msg;
+  const btnsEl = $('#choice-dialog-btns');
+  btnsEl.innerHTML = '';
+  for (const btn of buttons) {
+    const el = document.createElement('button');
+    el.className = btn.primary ? 'btn btn-primary' : 'btn btn-secondary';
+    el.textContent = btn.label;
+    el.addEventListener('click', () => { hideChoiceDialog(); btn.action(); });
+    btnsEl.appendChild(el);
+  }
+  $('#choice-dialog-bg').classList.add('show');
+}
+function hideChoiceDialog() {
+  $('#choice-dialog-bg').classList.remove('show');
+}
+
+function allLinesBarPrinted(cart) {
+  if (!cart || !cart.lines.length) return false;
+  return cart.lines.every(l => l.barPrinted === true || !buildLineDescription(l));
+}
+
 // Helper dùng chung: load font Roboto TTF từ CDN, cache vào _barTicketFont
 async function loadPdfFont() {
   if (_barTicketFont) return true;
@@ -3726,50 +3872,82 @@ function makePdfDoc(orientation, w, h) {
   return doc;
 }
 
-async function printBarTicket(cart) {
+async function printBarTicket(cart, mode) {
   if (!window.jspdf?.jsPDF) { toast('Thư viện PDF chưa tải xong, thử lại sau giây lát.'); return; }
   if (!await loadPdfFont()) return;
 
-  // Đếm tổng ly hợp lệ
-  let totalCups = 0;
-  for (const line of cart.lines) if (buildLineDescription(line)) totalCups += line.qty;
-  if (!totalCups) { toast('Không có món để in.'); return; }
+  // Nếu chưa rõ mode và có cả lines đã in lẫn chưa in → hỏi người dùng
+  if (!mode) {
+    const hasPrinted   = cart.lines.some(l => l.barPrinted && buildLineDescription(l));
+    const hasUnprinted = cart.lines.some(l => !l.barPrinted && buildLineDescription(l));
+    if (hasPrinted && hasUnprinted) {
+      showChoiceDialog(
+        'In phiếu pha chế',
+        'Có món đã được in tem. Bạn muốn in thế nào?',
+        [
+          { label: 'In tất cả',        primary: false, action: () => printBarTicket(cart, 'all') },
+          { label: 'Chỉ in món mới thêm', primary: true,  action: () => printBarTicket(cart, 'new') }
+        ]
+      );
+      return;
+    }
+    mode = 'all';
+  }
+
+  // Lọc lines cần in
+  const toPrint = mode === 'new'
+    ? cart.lines.filter(l => !l.barPrinted)
+    : cart.lines;
+
+  let cupsToPrint = 0;
+  for (const line of toPrint) if (buildLineDescription(line)) cupsToPrint += line.qty;
+  if (!cupsToPrint) { toast('Không có món để in.'); return; }
+
+  // Tổng ly toàn đơn và điểm bắt đầu đánh số
+  let totalCupsAll = 0;
+  for (const line of cart.lines) if (buildLineDescription(line)) totalCupsAll += line.qty;
+  let pageIdxStart = 0;
+  if (mode === 'new') {
+    for (const line of cart.lines) {
+      if (line.barPrinted && buildLineDescription(line)) pageIdxStart += line.qty;
+    }
+  }
 
   // Tạo PDF — mỗi ly 1 trang 50×30mm ngang
   const doc = makePdfDoc('l', 50, 30);
 
-  let pageIdx = 0;
-  for (const line of cart.lines) {
+  let pageIdx = pageIdxStart;
+  let firstPage = true;
+  for (const line of toPrint) {
     const desc = buildLineDescription(line);
     if (!desc) continue;
 
     for (let q = 0; q < line.qty; q++) {
-      if (pageIdx > 0) doc.addPage([50, 30], 'l');
+      if (!firstPage) doc.addPage([50, 30], 'l');
+      firstPage = false;
       pageIdx++;
 
-      // Tên món + chỉ số nếu qty > 1
       const qLabel = line.qty > 1 ? ` (${q + 1}/${line.qty})` : '';
-      doc.setFontSize(8);
+      doc.setFontSize(9.6);
       doc.text(2, 4, desc.item.name + qLabel, { maxWidth: 46 });
 
-      // Kẻ ngang trên
       doc.setLineWidth(0.25);
-      doc.line(0, 6.5, 50, 6.5);
+      doc.line(0, 7, 50, 7);
 
-      // Chi tiết: tùy chọn + topping + ghi chú
-      const rows = [desc.parts.join(' · ')];
+      const rows = [desc.parts.join(' - ')];
       if (desc.tops.length) rows.push('+ ' + desc.tops.join(', '));
-      if (line.note) rows.push('Ghi chu: ' + line.note);
+      doc.setFontSize(7.2);
+      doc.text(2, 10.5, rows.join('\n'), { maxWidth: 46 });
 
-      doc.setFontSize(6);
-      doc.text(2, 9.5, rows.join('\n'), { maxWidth: 46 });
+      if (line.note) {
+        doc.setFontSize(7.2);
+        doc.text(2, 21.5, 'Ghi chu: ' + line.note, { maxWidth: 46 });
+      }
 
-      // Kẻ ngang dưới
-      doc.line(0, 25, 50, 25);
+      doc.line(0, 24, 50, 24);
 
-      // Footer: mã đơn · vị trí · hotline
-      doc.setFontSize(5.5);
-      doc.text(2, 28.5, `${cart.displayCode}  *  ${pageIdx}/${totalCups}  *  ${MENU.shop.phone}`);
+      doc.setFontSize(7.2);
+      doc.text(2, 28.5, `${cart.displayCode}  *  ${pageIdx}/${totalCupsAll}  *  ${MENU.shop.phone}`);
     }
   }
 
@@ -3781,6 +3959,65 @@ async function printBarTicket(cart) {
     doc.autoPrint();
     triggerPdfIframe(doc.output('datauristring'), 'barTicketPrintFrame');
   }
+
+  // Đánh dấu đã in
+  for (const line of toPrint) {
+    if (buildLineDescription(line)) line.barPrinted = true;
+  }
+  saveState();
+  renderCart();
+}
+
+async function printSingleLine(cart, lineIdx) {
+  const line = cart.lines[lineIdx];
+  if (!line || !buildLineDescription(line)) { toast('Không có thông tin món để in.'); return; }
+  if (!window.jspdf?.jsPDF) { toast('Thư viện PDF chưa tải xong, thử lại sau giây lát.'); return; }
+  if (!await loadPdfFont()) return;
+
+  const desc = buildLineDescription(line);
+
+  // Vị trí của dòng này trong toàn đơn
+  let totalCupsAll = 0;
+  for (const l of cart.lines) if (buildLineDescription(l)) totalCupsAll += l.qty;
+  let lineStart = 0;
+  for (let j = 0; j < lineIdx; j++) {
+    if (buildLineDescription(cart.lines[j])) lineStart += cart.lines[j].qty;
+  }
+
+  const doc = makePdfDoc('l', 50, 30);
+
+  for (let q = 0; q < line.qty; q++) {
+    if (q > 0) doc.addPage([50, 30], 'l');
+    const qLabel = line.qty > 1 ? ` (${q + 1}/${line.qty})` : '';
+    doc.setFontSize(9.6);
+    doc.text(2, 4, desc.item.name + qLabel, { maxWidth: 46 });
+    doc.setLineWidth(0.25);
+    doc.line(0, 7, 50, 7);
+    const rows = [desc.parts.join(' - ')];
+    if (desc.tops.length) rows.push('+ ' + desc.tops.join(', '));
+    doc.setFontSize(7.2);
+    doc.text(2, 10.5, rows.join('\n'), { maxWidth: 46 });
+    if (line.note) {
+      doc.setFontSize(7.2);
+      doc.text(2, 21.5, 'Ghi chu: ' + line.note, { maxWidth: 46 });
+    }
+    doc.line(0, 24, 50, 24);
+    doc.setFontSize(7.2);
+    doc.text(2, 28.5, `${cart.displayCode}  *  ${lineStart + q + 1}/${totalCupsAll}  *  ${MENU.shop.phone}`);
+  }
+
+  const uri = doc.output('datauristring');
+  const ps = getPrintSettings();
+  if (ps.barTicket.mode === 'server' && ps.serverUrl && ps.barTicket.printer) {
+    await sendToPrintServer(uri, ps.serverUrl, ps.barTicket.printer, 'PhieuPhaChe-' + cart.displayCode);
+  } else {
+    doc.autoPrint();
+    triggerPdfIframe(doc.output('datauristring'), 'barTicketPrintFrame');
+  }
+
+  line.barPrinted = true;
+  saveState();
+  renderCart();
 }
 
 // ============== EVENT BINDING ==============
@@ -3808,6 +4045,16 @@ function bindEvents() {
 
   $('#search-input').addEventListener('input', (e) => {
     state.search = e.target.value;
+    $('#topbar-search').classList.toggle('has-value', e.target.value.length > 0);
+    renderMenu();
+  });
+
+  $('#search-clear').addEventListener('click', () => {
+    const inp = $('#search-input');
+    inp.value = '';
+    state.search = '';
+    $('#topbar-search').classList.remove('has-value');
+    inp.focus();
     renderMenu();
   });
 
@@ -3824,13 +4071,40 @@ function bindEvents() {
     let cart = getActiveCart();
     if (!cart) cart = newCart();
     if (!isCartEditable(cart)) {
-      // Auto-create new cart if current one is not editable
-      newCart();
-      renderAll();
-      toast('Đã tạo giỏ mới (giỏ cũ đã chốt)');
+      const sizeTag = e.target.closest('.price-tag[data-size]');
+      const itemId = card.dataset.item;
+      const size = sizeTag ? sizeTag.dataset.size : undefined;
+      if (cart.paid) {
+        showChoiceDialog(
+          'Đơn đã thanh toán',
+          'Hệ thống sẽ tạo đơn mới cho món này.',
+          [
+            { label: 'Hủy bỏ',  primary: false, action: () => {} },
+            { label: 'Đồng ý',  primary: true,  action: () => { newCart(); renderAll(); openItemModal(itemId, undefined, size); } }
+          ]
+        );
+      } else {
+        newCart();
+        renderAll();
+        toast('Đã tạo giỏ mới (giỏ cũ đã chốt)');
+      }
+      return;
     }
     const sizeTag = e.target.closest('.price-tag[data-size]');
-    openItemModal(card.dataset.item, undefined, sizeTag ? sizeTag.dataset.size : undefined);
+    const itemId = card.dataset.item;
+    const size = sizeTag ? sizeTag.dataset.size : undefined;
+    if (allLinesBarPrinted(cart)) {
+      showChoiceDialog(
+        'Tất cả các món hiện tại đã IN TEM PHA CHẾ',
+        'Bạn muốn tạo đơn mới hay thêm vào đơn hiện tại?',
+        [
+          { label: 'Tạo đơn mới', primary: false, action: () => { newCart(); renderAll(); openItemModal(itemId, undefined, size); } },
+          { label: 'Thêm vào đơn hiện tại', primary: true, action: () => openItemModal(itemId, undefined, size) }
+        ]
+      );
+      return;
+    }
+    openItemModal(itemId, undefined, size);
   });
 
   $('#cart-tabs').addEventListener('click', (e) => {
@@ -3838,7 +4112,25 @@ function bindEvents() {
     if (pinBtn) { e.stopPropagation(); togglePin(pinBtn.dataset.pin); return; }
     const closeBtn = e.target.closest('[data-close]');
     if (closeBtn) { e.stopPropagation(); closeCart(closeBtn.dataset.close); return; }
-    if (e.target.closest('#add-cart-btn')) { newCart(); renderAll(); return; }
+    if (e.target.closest('#add-cart-btn')) {
+      const emptyCart = state.carts.find(c => c.lines.length === 0 && !c.paid && !c.cancelled);
+      if (emptyCart) {
+        state.activeCartId = emptyCart.id;
+        saveState();
+        renderCart();
+        requestAnimationFrame(() => {
+          const tabEl = $(`[data-cart="${emptyCart.id}"]`);
+          if (tabEl) {
+            tabEl.classList.add('flashing');
+            tabEl.addEventListener('animationend', () => tabEl.classList.remove('flashing'), { once: true });
+          }
+        });
+      } else {
+        newCart();
+        renderAll();
+      }
+      return;
+    }
     const tab = e.target.closest('[data-cart]');
     if (tab) {
       state.activeCartId = tab.dataset.cart;
@@ -3877,6 +4169,12 @@ function bindEvents() {
     const editBtn = e.target.closest('[data-edit-line]');
     if (editBtn) {
       openItemModal(cart.lines[parseInt(editBtn.dataset.editLine)].itemId, parseInt(editBtn.dataset.editLine));
+      return;
+    }
+    const printLineBtn = e.target.closest('[data-print-line]');
+    if (printLineBtn) {
+      printSingleLine(cart, parseInt(printLineBtn.dataset.printLine));
+      return;
     }
   });
 
@@ -3912,6 +4210,9 @@ function bindEvents() {
   $('#item-modal').addEventListener('click', (e) => {
     if (e.target.id === 'item-modal') closeModal();
   });
+  $('#choice-dialog-bg').addEventListener('click', (e) => {
+    if (e.target.id === 'choice-dialog-bg') hideChoiceDialog();
+  });
   $('#modal-add').addEventListener('click', commitModal);
   $('#modal-body').addEventListener('click', modalEvent);
   $('#modal-body').addEventListener('contextmenu', modalEvent);
@@ -3941,27 +4242,6 @@ function bindEvents() {
 
   // === MOBILE-SPECIFIC EVENTS ===
 
-  // Mobile menu toolbar (search + cat-nav) lives inside cart-body, re-rendered each time.
-  // Use event delegation on cart-body.
-  $('#cart-body').addEventListener('input', (e) => {
-    if (e.target.id === 'mobile-search-input') {
-      state.search = e.target.value;
-      // Sync to desktop search input too
-      $('#search-input').value = e.target.value;
-      // Re-render only the content area, not the whole cart (to avoid losing input focus)
-      // Easiest: rebuild mobile menu HTML and replace cart-body, but that loses focus.
-      // So: only rebuild the content portion.
-      const contentEl = $('#cart-body .mobile-menu-content');
-      if (contentEl) {
-        // Build only the content, then swap
-        const tmp = document.createElement('div');
-        tmp.innerHTML = buildMobileMenuHtml();
-        const newContent = tmp.querySelector('.mobile-menu-content');
-        if (newContent) contentEl.replaceWith(newContent);
-      }
-    }
-  });
-
   $('#cart-body').addEventListener('click', (e) => {
     // Mobile category filter buttons
     const catBtn = e.target.closest('.cat-nav-mobile button[data-cat]');
@@ -3986,12 +4266,40 @@ function bindEvents() {
     let cart = getActiveCart();
     if (!cart) cart = newCart();
     if (!isCartEditable(cart)) {
-      newCart();
-      renderAll();
-      toast('Đã tạo giỏ mới (giỏ cũ đã chốt)');
+      const sizeTag = e.target.closest('.price-tag[data-size]');
+      const itemId = card.dataset.item;
+      const size = sizeTag ? sizeTag.dataset.size : undefined;
+      if (cart.paid) {
+        showChoiceDialog(
+          'Đơn đã thanh toán',
+          'Hệ thống sẽ tạo đơn mới cho món này.',
+          [
+            { label: 'Hủy bỏ',  primary: false, action: () => {} },
+            { label: 'Đồng ý',  primary: true,  action: () => { newCart(); renderAll(); openItemModal(itemId, undefined, size); } }
+          ]
+        );
+      } else {
+        newCart();
+        renderAll();
+        toast('Đã tạo giỏ mới (giỏ cũ đã chốt)');
+      }
+      return;
     }
     const sizeTag = e.target.closest('.price-tag[data-size]');
-    openItemModal(card.dataset.item, undefined, sizeTag ? sizeTag.dataset.size : undefined);
+    const itemId = card.dataset.item;
+    const size = sizeTag ? sizeTag.dataset.size : undefined;
+    if (allLinesBarPrinted(cart)) {
+      showChoiceDialog(
+        'Tất cả các món hiện tại đã IN TEM PHA CHẾ',
+        'Bạn muốn tạo đơn mới hay thêm vào đơn hiện tại?',
+        [
+          { label: 'Tạo đơn mới', primary: false, action: () => { newCart(); renderAll(); openItemModal(itemId, undefined, size); } },
+          { label: 'Thêm vào đơn hiện tại', primary: true, action: () => openItemModal(itemId, undefined, size) }
+        ]
+      );
+      return;
+    }
+    openItemModal(itemId, undefined, size);
   });
 
   // Mobile pay button -> expand detail panel
@@ -4094,7 +4402,7 @@ async function init() {
       const banner = document.createElement('div');
       banner.className = 'menu-error';
       banner.innerHTML = '<strong>⚠ Đang dùng menu nhúng (mặc định)</strong>Không tải được file <code>menu.json</code> - có thể do mở file trực tiếp (file://) thay vì qua HTTP server. Để chỉnh menu, hãy chạy qua local server (vd: <code>python -m http.server</code>) hoặc edit phần JSON cuối file HTML.';
-      $('#menu-panel').insertBefore(banner, $('.search-bar'));
+      $('#menu-panel').insertBefore(banner, $('#cat-nav'));
     }
   } catch (e) {
     document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>Lỗi tải menu</h2><p>' + escHtml(e.message) + '</p></div>';
@@ -4105,14 +4413,19 @@ async function init() {
   // Migrate old state if needed: ensure displayCode exists
   for (const c of state.carts) {
     if (!c.displayCode) c.displayCode = genDisplayCode();
-    // Ensure flag fields exist (for backward compat)
     if (typeof c.paid !== 'boolean') c.paid = false;
     if (typeof c.delivered !== 'boolean') c.delivered = false;
     if (typeof c.cancelled !== 'boolean') c.cancelled = false;
     if (typeof c.pinned !== 'boolean') c.pinned = false;
+    for (const l of (c.lines || [])) {
+      if (typeof l.barPrinted !== 'boolean') l.barPrinted = false;
+    }
   }
   for (const c of state.archived) {
     if (!c.displayCode) c.displayCode = genDisplayCode();
+    for (const l of (c.lines || [])) {
+      if (typeof l.barPrinted !== 'boolean') l.barPrinted = false;
+    }
   }
 
   bindEvents();
